@@ -85,8 +85,10 @@ class GraphHolder(object):
 
 if __name__ == "__main__":
     ##TODO abstract simulation variables for cls and simulation to yaml file.
+    import tqdm 
+
     total_iters = []
-    for i in range(100):
+    for i in tqdm.tqdm(range(100)):
         x = GraphHolder()
         total_iters.append(x.sample_graph_iterative())
 
