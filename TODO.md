@@ -7,4 +7,4 @@
 
 4. Fit equasions / research theory for the erdos-something graph structure. 
 
-5. 
+5. Barabasi graph look at  
