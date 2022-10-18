@@ -1,8 +1,7 @@
 import numpy as np
-import pandas
 import random
 import tqdm
-
+import multiprocessing
 
 class ErdosGraphSimulator(object):
     """ """
@@ -30,8 +29,7 @@ class ErdosGraphSimulator(object):
 
     def generate_adj_matrix(self):
         """
-        initial_graph class property - np.ndarray:
-            a square adjacency matrix representation of the first time step of our graph.
+        Generate
         """
         uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
         for _ in range(self.num_timestep_edges):
@@ -76,11 +74,18 @@ class ErdosGraphSimulator(object):
         return infection_matrix_list[-1], timesteps
 
 
-if __name__ == "__main__":
-    iterations_for_convergence = []
-    for i in tqdm.tqdm(range(10000)):
-        x = ErdosGraphSimulator()
-        _, iterations = x.infect_till_saturation()
-        iterations_for_convergence.append(iterations)
+def simulate_saturation(_ = 1): 
+    x = ErdosGraphSimulator()
+    _, iterations = x.infect_till_saturation()
+    return iterations
 
-    print(np.average(iterations_for_convergence))
+if __name__ == "__main__":
+
+    convergence_steps = []
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
+        with tqdm.tqdm(total=10000) as pbar:
+            for _ in p.imap_unordered(simulate_saturation, range(0, 10000)):
+                pbar.update()
+                convergence_steps.append(_)
+        
+    print(np.average(convergence_steps))
