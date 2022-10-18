@@ -32,6 +32,12 @@ class ErdosGraphSimulator(object):
 
         return infection_array
 
+    def generate_matrix(self, graph_type : str):
+        graph_types = {
+            "random" : self.infection_matrix()
+        }  
+        return graph_types
+
     def generate_adj_matrix(self) -> np.ndarray:
         """
         Generate a random num_node X num_node adjacency matrix that is seeded with
@@ -47,7 +53,7 @@ class ErdosGraphSimulator(object):
         return uninfected_graph
 
     def infect_till_saturation(
-        self, infection_probability: float = 0.5
+        self, infection_probability: float = 1
     ) -> Tuple[np.ndarray, int]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -69,6 +75,7 @@ class ErdosGraphSimulator(object):
         ):
             timesteps += 1
             current_infection_matrix = infection_matrix_list[-1]
+            
             adj_matrix = self.generate_adj_matrix()
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
 
@@ -77,7 +84,6 @@ class ErdosGraphSimulator(object):
                     current_infection_matrix[pair[0]]
                     or current_infection_matrix[pair[1]] == 1
                 ):
-
                     # Do not always guarrentee infection
                     infection_outcome = np.random.choice(
                         [0, 1], p=[1 - infection_probability, infection_probability]
@@ -90,7 +96,7 @@ class ErdosGraphSimulator(object):
 
                 infection_matrix_list.append(current_infection_matrix)
 
-        return infection_matrix_list[-1], timesteps
+        return infection_matrix_list, timesteps
 
 
 def simulate_saturation(_=1):
@@ -107,5 +113,9 @@ if __name__ == "__main__":
             for _ in p.imap_unordered(simulate_saturation, range(0, 10000)):
                 pbar.update()
                 convergence_steps.append(_)
-
+    
+    ##print(convergence_steps, "\n")
     print(np.average(convergence_steps))
+
+
+
