@@ -1,0 +1,5 @@
+erdos_graph: 
+  num_nodes : 20 
+  num_agents : 3 
+  num_timestep_edges : 5 
+  
