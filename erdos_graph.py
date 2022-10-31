@@ -3,17 +3,60 @@ import numpy as np
 import random
 import tqdm
 import multiprocessing
+import scipy
+import pandas as pd
+
+
+class GraphStructureGenerator(object):
+    """
+    """
+    def __init__(self, structure_name : str, num_nodes : int = 20):
+        self.structure_name = structure_name
+        self.num_nodes = num_nodes
+        self.allowed_structures = ["fully_connected", "random_sparse"]
+
+    @property
+    def adj_matrix(self):
+        '''
+        '''
+        graph_mapping = {
+            "fully_connected" : self.generate_fully_connected_graph,
+            "random_sparse" : self.generate_sparse_graph
+        }
+        return graph_mapping[self.structure_name]()
+    
+    def generate_fully_connected_graph(self): 
+        """
+        """
+        return np.ones((self.num_nodes, self.num_nodes))
+
+    def generate_sparse_graph(self, num_edges : int = 5) -> np.ndarray:
+        """
+        Generate a random num_node X num_node adjacency matrix that is seeded with
+        num_timestep_edges connections in another wise sparse graph.
+        """
+        uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
+        for _ in range(num_edges):
+            random_i, random_j = random.randint(0, self.num_nodes - 1), random.randint(
+                0, self.num_nodes - 1
+            )
+            uninfected_graph[random_i][random_j] = 1
+
+        return uninfected_graph
+
 
 
 class ErdosGraphSimulator(object):
     """ """
 
     def __init__(
-        self, num_nodes: int = 20, num_agents: int = 3, num_timestep_edges: int = 4
+        self, num_nodes: int = 100, num_agents: int = 3, num_timestep_edges: int = 4, structure_name : str = "fully_connected"
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.num_timestep_edges = num_timestep_edges
+
+        self.graph_generator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
 
     @property
     def infection_matrix(self) -> np.ndarray:
@@ -32,28 +75,9 @@ class ErdosGraphSimulator(object):
 
         return infection_array
 
-    def generate_matrix(self, graph_type : str):
-        graph_types = {
-            "random" : self.infection_matrix()
-        }  
-        return graph_types
-
-    def generate_adj_matrix(self) -> np.ndarray:
-        """
-        Generate a random num_node X num_node adjacency matrix that is seeded with
-        num_timestep_edges connections in another wise sparse graph.
-        """
-        uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
-        for _ in range(self.num_timestep_edges):
-            random_i, random_j = random.randint(0, self.num_nodes - 1), random.randint(
-                0, self.num_nodes - 1
-            )
-            uninfected_graph[random_i][random_j] = 1
-
-        return uninfected_graph
 
     def infect_till_saturation(
-        self, infection_probability: float = 1
+        self, infection_probability: float = 0.25
     ) -> Tuple[np.ndarray, int]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -75,8 +99,9 @@ class ErdosGraphSimulator(object):
         ):
             timesteps += 1
             current_infection_matrix = infection_matrix_list[-1]
-            
-            adj_matrix = self.generate_adj_matrix()
+
+            #adj_matrix = self.generate_adj_matrix()
+            adj_matrix = self.graph_generator.adj_matrix
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
 
             for pair in nodepair_list:
@@ -101,21 +126,35 @@ class ErdosGraphSimulator(object):
 
 def simulate_saturation(_=1):
     # Global function just for the sake of making multiprocessing nice and simple
-    x = ErdosGraphSimulator()
+    x = ErdosGraphSimulator(num_nodes=num_nodes, num_agents=num_initial_agents)
     _, iterations = x.infect_till_saturation()
     return iterations
 
 
 if __name__ == "__main__":
+    final_dicts = []
+    global num_initial_agents, num_nodes
+    num_initial_agents, num_nodes = 1, 20
     convergence_steps = []
+    print(GraphStructureGenerator("fully_connected", 20).adj_matrix)
+    
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
-        with tqdm.tqdm(total=10000) as pbar:
-            for _ in p.imap_unordered(simulate_saturation, range(0, 10000)):
+        with tqdm.tqdm(total=500) as pbar:
+            for _ in p.imap_unordered(simulate_saturation, range(0, 500)):
                 pbar.update()
                 convergence_steps.append(_)
-    
+
     ##print(convergence_steps, "\n")
-    print(np.average(convergence_steps))
+    stats_dict = {
+        "mean": np.average(convergence_steps),
+        "variance": np.var(convergence_steps),
+        "skew": scipy.stats.skew(convergence_steps),
+        "kurtosis": scipy.stats.kurtosis(convergence_steps),
+        "num_nodes": num_nodes,
+    }
+    print(stats_dict)
 
-
-
+    """df = pd.DataFrame.from_dict({f"num_agents_{num_initial_agents}": stats_dict})
+    df.to_csv(
+        f"/home/cm2435/Desktop/university_final_year_cw/data/stats/{num_initial_agents}.csv"
+    )"""
