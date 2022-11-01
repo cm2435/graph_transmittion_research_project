@@ -5,7 +5,7 @@ import tqdm
 import multiprocessing
 import scipy
 import pandas as pd
-
+import itertools
 
 class GraphStructureGenerator(object):
     """
@@ -124,6 +124,8 @@ class ErdosGraphSimulator(object):
 
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
+def mean(a):
+    return sum(a) / len(a)
 
 def simulate_saturation(_=1):
     # Global function just for the sake of making multiprocessing nice and simple
@@ -139,7 +141,7 @@ if __name__ == "__main__":
     simulation_output = []
     
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
-        num_simulation_steps = 500
+        num_simulation_steps = 100
         with tqdm.tqdm(total=num_simulation_steps) as pbar:
             for _ in p.imap_unordered(simulate_saturation, range(0, num_simulation_steps)):
                 pbar.update()
@@ -147,7 +149,14 @@ if __name__ == "__main__":
 
     convergence_steps = [x[0] for x in simulation_output]
     saturation_fractions = [x[1] for x in simulation_output]
-    
+    print(max([len(x) for x in saturation_fractions]))
+
+
+    padded_list = list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
+    for x in padded_list: 
+        print(x)
+    print(padded_list[0])
+
     stats_dict = {
         "mean": np.average(convergence_steps),
         "variance": np.var(convergence_steps),
