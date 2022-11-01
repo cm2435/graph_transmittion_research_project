@@ -77,7 +77,7 @@ class ErdosGraphSimulator(object):
 
 
     def infect_till_saturation(
-        self, infection_probability: float = 0.01
+        self, infection_probability: float = 1
     ) -> Tuple[np.ndarray, int]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -121,27 +121,24 @@ class ErdosGraphSimulator(object):
 
             infection_matrix_list.append(current_infection_matrix)
             fraction_infected.append(np.count_nonzero(current_infection_matrix == 1) / len(current_infection_matrix))
-
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
-def mean(a):
-    return sum(a) / len(a)
 
 def simulate_saturation(_=1):
     # Global function just for the sake of making multiprocessing nice and simple
-    x = ErdosGraphSimulator(num_nodes=num_nodes, num_agents=num_initial_agents)
+    x = ErdosGraphSimulator(num_nodes=num_nodes, num_agents=num_initial_agents, structure_name= structure_name)
     _, iterations, fraction_infected = x.infect_till_saturation()
     return iterations, fraction_infected
 
 
 if __name__ == "__main__":
     final_dicts = []
-    global num_initial_agents, num_nodes
-    num_initial_agents, num_nodes = 1, 20
+    global num_initial_agents, num_nodes, structure_name 
+    num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
     simulation_output = []
     
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
-        num_simulation_steps = 100
+        num_simulation_steps = 1000
         with tqdm.tqdm(total=num_simulation_steps) as pbar:
             for _ in p.imap_unordered(simulate_saturation, range(0, num_simulation_steps)):
                 pbar.update()
@@ -151,11 +148,10 @@ if __name__ == "__main__":
     saturation_fractions = [x[1] for x in simulation_output]
     print(max([len(x) for x in saturation_fractions]))
 
-
     padded_list = list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
-    for x in padded_list: 
-        print(x)
-    print(padded_list[0])
+    saturation_timestep = np.mean(padded_list, axis = 0)
+
+    print(saturation_timestep)
 
     stats_dict = {
         "mean": np.average(convergence_steps),
