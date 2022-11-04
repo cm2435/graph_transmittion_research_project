@@ -15,6 +15,26 @@ def simulate_saturation(_=1):
     _, iterations, fraction_infected = x.infect_till_saturation(infection_probability= 0.01)
     return iterations, fraction_infected
 
+# run main.py gen-graph
+def genAndViz(args, conf):
+    import subprocess
+    for structure in ["fully_connected", "random_sparse"]:
+        gen = GraphStructureGenerator(structure, int(conf["nodes"]))
+        mat = gen.adj_matrix
+        graphString = "graph { "
+        it = np.nditer(mat, flags=['multi_index'])
+        for x in it:
+            idx = it.multi_index
+            if x == 1:
+                graphString += f"{idx[0]} -- {idx[1]}\n"
+            else:
+                graphString += f"{idx[0]}\n"
+        graphString += "}"
+
+        filename = f"{structure}.png"
+        subprocess.run(["dot", "-Tpng", "-o", filename], input=graphString.encode());
+        print(f"See {filename}")
+    return
 
 if __name__ == "__main__":
     """
@@ -32,8 +52,11 @@ if __name__ == "__main__":
                     epilog = 'Written by Charlie Masters and Max Haughton')
     parser.add_argument("--csv-dir", dest="csv_dir", help="Where to write a .csv file")
     parser.add_argument("--config", dest="config_file", help="Path to a configuration file, default is config.ini", default="config.ini")
-    parsedArgs = parser.parse_args()
+    subParsers = parser.add_subparsers(title="Some sub-utilities are available", dest="cmd")
+    graphDebug = subParsers.add_parser("gen-graph", help="Generate an example graph using each available method")
+    graphDebug.set_defaults(func=genAndViz)
 
+    parsedArgs = parser.parse_args()
     configuration.read(parsedArgs.config_file)
 
     final_dicts = []
@@ -42,6 +65,10 @@ if __name__ == "__main__":
     num_initial_agents = int(conf["initial_agents"])
     num_nodes = int(conf["nodes"])
     structure_name = conf["structure"]
+
+    if parsedArgs.cmd is not None:
+        parsedArgs.func(parsedArgs, conf)
+        exit()
     # num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
     simulation_output = []
     
