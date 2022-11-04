@@ -21,7 +21,16 @@ def genAndViz(args, conf):
     for structure in ["fully_connected", "random_sparse"]:
         gen = GraphStructureGenerator(structure, int(conf["nodes"]))
         mat = gen.adj_matrix
-        graphString = "graph { "
+        """
+        For the unitiated, this is building a (graphviz) dot file.
+        The for an undirected graph syntax is:
+        graph {
+            N1 -- N2
+        }
+        """
+        graphString = "graph {"
+        # neato supports non-overlapping w/ splines
+        graphString += "graph [layout=neato, overlap=false, splines=true]"
         it = np.nditer(mat, flags=['multi_index'])
         for x in it:
             idx = it.multi_index
