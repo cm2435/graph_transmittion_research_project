@@ -41,8 +41,20 @@ class DebugStatic(GraphGenerator):
     name = "debug_static"
     def adj_matrix(self):
         debug_graph = np.zeros((self.num_nodes, self.num_nodes))
-        debug_graph[1][2] = 1
+        debug_graph[1,2] = 1
         return debug_graph
+class BarabasiAlbert(GraphGenerator):
+    name = "barabasi_albert"
+    def adj_matrix(self):
+        import networkx as nx
+        graph = nx.barabasi_albert_graph(self.num_nodes, 2)
+        return nx.to_numpy_array(graph)
+class CycleGraph(GraphGenerator):
+    name = "cycle_generator"
+    def adj_matrix(self):
+        import networkx as nx
+        graph = nx.cycle_graph(self.num_nodes)
+        return nx.to_numpy_array(graph)
 class GraphStructureGenerator(object):
     """
     """
