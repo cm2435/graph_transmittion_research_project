@@ -18,9 +18,10 @@ def simulate_saturation(_=1):
 # run main.py gen-graph
 def genAndViz(args, conf):
     import subprocess
-    for structure in ["fully_connected", "random_sparse"]:
-        gen = GraphStructureGenerator(structure, int(conf["nodes"]))
-        mat = gen.adj_matrix
+    for structure in GraphGenerator.get_graph_names():
+        RecClass = GraphGenerator.from_string(structure)
+        gen = RecClass(structure, int(conf["nodes"]))
+        mat = gen.adj_matrix()
         """
         For the unitiated, this is building a (graphviz) dot file.
         The for an undirected graph syntax is:
