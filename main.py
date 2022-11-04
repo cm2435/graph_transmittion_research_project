@@ -17,16 +17,32 @@ def simulate_saturation(_=1):
 
 
 if __name__ == "__main__":
+    """
+    At some point:
+    Have a config file which defines defaults for this, that, and the other
+    but allow those defaults to be overridden with a CLI argument.
+    """
+    # Config parser uses .ini
+    import configparser
+    configuration = configparser.ConfigParser()
+
     parser = argparse.ArgumentParser(
                     prog = 'GraphTransmission',
                     description = 'Simulates information propagation on networks',
                     epilog = 'Written by Charlie Masters and Max Haughton')
     parser.add_argument("--csv-dir", dest="csv_dir", help="Where to write a .csv file")
+    parser.add_argument("--config", dest="config_file", help="Path to a configuration file, default is config.ini", default="config.ini")
     parsedArgs = parser.parse_args()
 
+    configuration.read(parsedArgs.config_file)
+
     final_dicts = []
-    global num_initial_agents, num_nodes, structure_name 
-    num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
+    global num_initial_agents, num_nodes, structure_name
+    conf = configuration["RUN"]
+    num_initial_agents = int(conf["initial_agents"])
+    num_nodes = int(conf["nodes"])
+    structure_name = conf["structure"]
+    # num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
     simulation_output = []
     
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
