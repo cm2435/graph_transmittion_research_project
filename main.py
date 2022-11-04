@@ -20,7 +20,7 @@ def genAndViz(args, conf):
     import subprocess
     for structure in GraphGenerator.get_graph_names():
         RecClass = GraphGenerator.from_string(structure)
-        gen = RecClass(structure, int(conf["nodes"]))
+        gen = RecClass(structure, int(conf["RUN"]["nodes"]))
         mat = gen.adj_matrix()
         """
         For the unitiated, this is building a (graphviz) dot file.
@@ -48,9 +48,10 @@ def genAndViz(args, conf):
             else:
                 graphString += f"{idx[0]}\n"
         graphString += "}"
-
         filename = f"{structure}.png"
-        subprocess.run(["dot", "-Tpng", "-o", filename], input=graphString.encode());
+        import os
+        path = os.path.join(conf["VIZ"]["output_dir"], filename)
+        subprocess.run(["dot", "-Tpng", "-o", path], input=graphString.encode());
         print(f"See {filename}")
     return
 
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     structure_name = conf["structure"]
 
     if parsedArgs.cmd is not None:
-        parsedArgs.func(parsedArgs, conf)
+        parsedArgs.func(parsedArgs, configuration)
         exit()
     # num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
     simulation_output = []
