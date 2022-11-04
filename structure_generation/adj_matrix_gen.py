@@ -26,8 +26,8 @@ class GraphStructureGenerator(object):
 
     def generate_sparse_graph(self, num_edges : int = 5) -> np.ndarray:
         """
-        Generate a random num_node X num_node adjacency matrix that is seeded with
-        num_timestep_edges connections in another wise sparse graph.
+        Generate a random num_node by num_node adjacency matrix that is seeded with
+        num_timestep_edges connections in an otherwise sparse graph.
         """
         uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
         for _ in range(num_edges):
