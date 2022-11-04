@@ -4,7 +4,7 @@ import random
 import multiprocessing
 import tqdm 
 import scipy 
-
+import argparse
 from graph_structure.erdos_graph import ErdosGraphSimulator
 from structure_generation.adj_matrix_gen import *
 
@@ -17,6 +17,13 @@ def simulate_saturation(_=1):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+                    prog = 'GraphTransmission',
+                    description = 'Simulates information propagation on networks',
+                    epilog = 'Written by Charlie Masters and Max Haughton')
+    parser.add_argument("--csv-dir", dest="csv_dir", help="Where to write a .csv file")
+    parsedArgs = parser.parse_args()
+
     final_dicts = []
     global num_initial_agents, num_nodes, structure_name 
     num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
@@ -45,8 +52,11 @@ if __name__ == "__main__":
         "num_nodes": num_nodes,
     }
     print(stats_dict)
-
-    """df = pd.DataFrame.from_dict({f"num_agents_{num_initial_agents}": stats_dict})
-    df.to_csv(
-        f"/home/cm2435/Desktop/university_final_year_cw/data/stats/{num_initial_agents}.csv"
-    )"""
+    import pandas as pd
+    if parsedArgs.csv_dir is not None:
+        df = pd.DataFrame.from_dict({f"num_agents_{num_initial_agents}": stats_dict})
+        import os
+        df.to_csv(
+            os.path.join(parsedArgs.csv_dir, f"{num_initial_agents}.csv")
+            #f"/home/cm2435/Desktop/university_final_year_cw/data/stats/{num_initial_agents}.csv"
+        )
