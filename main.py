@@ -7,9 +7,12 @@ import scipy
 import argparse
 from graph_structure.erdos_graph import ErdosGraphSimulator
 from structure_generation.adj_matrix_gen import *
+from collections import namedtuple
 
 
-def simulate_saturation(_=1):
+def simulate_saturation(params):
+    # I hate this
+    num_nodes, num_initial_agents, structure_name = params
     # Global function just for the sake of making multiprocessing nice and simple
     x = ErdosGraphSimulator(num_nodes=num_nodes, num_agents=num_initial_agents, structure_name= structure_name)
     _, iterations, fraction_infected = x.infect_till_saturation(infection_probability= 0.01)
@@ -95,8 +98,9 @@ if __name__ == "__main__":
     
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         num_simulation_steps = 1000
+        iterThis = itertools.repeat((num_nodes, num_initial_agents, structure_name), num_simulation_steps)
         with tqdm.tqdm(total=num_simulation_steps) as pbar:
-            for _ in p.imap_unordered(simulate_saturation, range(0, num_simulation_steps)):
+            for _ in p.imap_unordered(simulate_saturation, iterThis):
                 pbar.update()
                 simulation_output.append(_)
 
