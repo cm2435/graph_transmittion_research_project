@@ -1,7 +1,7 @@
 import numpy as np 
 import random 
 import abc
-
+import networkx as nx
 class GraphGenerator(abc.ABC):
     @abc.abstractmethod
     def adj_matrix(self):
@@ -20,7 +20,7 @@ class GraphGenerator(abc.ABC):
 class FullyConnected(GraphGenerator):
     name = "fully_connected"
     def adj_matrix(self):
-        return np.ones((self.num_nodes, self.num_nodes))
+        return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 class RandomSparse(GraphGenerator):
     name = "random_sparse"
     def adj_matrix(self):
