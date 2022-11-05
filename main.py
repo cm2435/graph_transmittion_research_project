@@ -32,13 +32,15 @@ def genAndViz(args, conf):
         graphString = "graph {"
         # neato supports non-overlapping w/ splines
         graphString += "graph [layout=neato, overlap=false, splines=true]"
-        graphString += f"label = {structure}\n"
+        
         # If the adjacency matrix is symmetric then it
         # is assumed that is an undirected graph.
 
         assumeUndirected = (mat == mat.T).all()
         # If we think it's undirected then we only iterate the
         # matrix elements above the diagonal
+        explain = "(assumed undirected)" if assumeUndirected else ""
+        graphString += f"label = \"{structure} {explain} \" \n"
         spliced = np.triu(mat) if assumeUndirected else mat
         it = np.nditer(spliced, flags=['multi_index'])
         for x in it:
