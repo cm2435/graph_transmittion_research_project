@@ -7,30 +7,29 @@ import scipy
 import pandas as pd
 import itertools
 
+
 class GraphStructureGenerator(object):
-    """
-    """
-    def __init__(self, structure_name : str, num_nodes : int = 20):
+    """ """
+
+    def __init__(self, structure_name: str, num_nodes: int = 20):
         self.structure_name = structure_name
         self.num_nodes = num_nodes
         self.allowed_structures = ["fully_connected", "random_sparse"]
 
     @property
     def adj_matrix(self):
-        '''
-        '''
+        """ """
         graph_mapping = {
-            "fully_connected" : self.generate_fully_connected_graph,
-            "random_sparse" : self.generate_sparse_graph
+            "fully_connected": self.generate_fully_connected_graph,
+            "random_sparse": self.generate_sparse_graph,
         }
         return graph_mapping[self.structure_name]()
-    
-    def generate_fully_connected_graph(self): 
-        """
-        """
+
+    def generate_fully_connected_graph(self):
+        """ """
         return np.ones((self.num_nodes, self.num_nodes))
 
-    def generate_sparse_graph(self, num_edges : int = 5) -> np.ndarray:
+    def generate_sparse_graph(self, num_edges: int = 5) -> np.ndarray:
         """
         Generate a random num_node X num_node adjacency matrix that is seeded with
         num_timestep_edges connections in another wise sparse graph.
@@ -45,18 +44,23 @@ class GraphStructureGenerator(object):
         return uninfected_graph
 
 
-
 class ErdosGraphSimulator(object):
     """ """
 
     def __init__(
-        self, num_nodes: int = 100, num_agents: int = 3, num_timestep_edges: int = 4, structure_name : str = "fully_connected"
+        self,
+        num_nodes: int = 100,
+        num_agents: int = 3,
+        num_timestep_edges: int = 4,
+        structure_name: str = "fully_connected",
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.num_timestep_edges = num_timestep_edges
 
-        self.graph_generator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
+        self.graph_generator = GraphStructureGenerator(
+            structure_name=structure_name, num_nodes=num_nodes
+        )
 
     @property
     def infection_matrix(self) -> np.ndarray:
@@ -74,7 +78,6 @@ class ErdosGraphSimulator(object):
                 infection_array[random_idx] = 1
 
         return infection_array
-
 
     def infect_till_saturation(
         self, infection_probability: float = 1
@@ -100,7 +103,7 @@ class ErdosGraphSimulator(object):
             timesteps_to_full_saturation += 1
             current_infection_matrix = infection_matrix_list[-1]
 
-            #adj_matrix = self.generate_adj_matrix()
+            # adj_matrix = self.generate_adj_matrix()
             adj_matrix = self.graph_generator.adj_matrix
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
 
@@ -120,27 +123,36 @@ class ErdosGraphSimulator(object):
                         ) = (1, 1)
 
             infection_matrix_list.append(current_infection_matrix)
-            fraction_infected.append(np.count_nonzero(current_infection_matrix == 1) / len(current_infection_matrix))
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
+            fraction_infected.append(
+                np.count_nonzero(current_infection_matrix == 1)
+                / len(current_infection_matrix)
+            )
+        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
 
 
 def simulate_saturation(_=1):
     # Global function just for the sake of making multiprocessing nice and simple
-    x = ErdosGraphSimulator(num_nodes=num_nodes, num_agents=num_initial_agents, structure_name= structure_name)
+    x = ErdosGraphSimulator(
+        num_nodes=num_nodes,
+        num_agents=num_initial_agents,
+        structure_name=structure_name,
+    )
     _, iterations, fraction_infected = x.infect_till_saturation()
     return iterations, fraction_infected
 
 
 if __name__ == "__main__":
     final_dicts = []
-    global num_initial_agents, num_nodes, structure_name 
+    global num_initial_agents, num_nodes, structure_name
     num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
     simulation_output = []
-    
+
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         num_simulation_steps = 1000
         with tqdm.tqdm(total=num_simulation_steps) as pbar:
-            for _ in p.imap_unordered(simulate_saturation, range(0, num_simulation_steps)):
+            for _ in p.imap_unordered(
+                simulate_saturation, range(0, num_simulation_steps)
+            ):
                 pbar.update()
                 simulation_output.append(_)
 
@@ -149,7 +161,7 @@ if __name__ == "__main__":
     print(max([len(x) for x in saturation_fractions]))
 
     padded_list = list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
-    saturation_timestep = np.mean(padded_list, axis = 0)
+    saturation_timestep = np.mean(padded_list, axis=0)
 
     print(saturation_timestep)
 

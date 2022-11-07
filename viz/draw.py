@@ -2,10 +2,12 @@
 from cProfile import label
 import numpy as np
 from pathlib import Path
+
 # Draw a picture of an adjacency matrix. No customization, aims to do the right thing.
 #   mat: adjacency matrix
-def draw_graph(mat: np.array, path: str, label_name = ""):
+def draw_graph(mat: np.array, path: str, label_name=""):
     import os
+
     label_name = Path(path).stem if label_name == "" else label_name
     """
     For the unitiated, this is building a (graphviz) dot file.
@@ -27,9 +29,9 @@ def draw_graph(mat: np.array, path: str, label_name = ""):
     # If we think it's undirected then we only iterate the
     # matrix elements above the diagonal
     explain = "(assumed undirected)" if assumeUndirected else ""
-    graphString += f"label = \"{label_name} {explain} \" \n"
+    graphString += f'label = "{label_name} {explain} " \n'
     spliced = np.triu(mat) if assumeUndirected else mat
-    it = np.nditer(spliced, flags=['multi_index'])
+    it = np.nditer(spliced, flags=["multi_index"])
     # To draw a directed graph properly in DOT a different symbol is needed
     conString = "--" if assumeUndirected else "->"
     for x in it:
@@ -40,5 +42,6 @@ def draw_graph(mat: np.array, path: str, label_name = ""):
             graphString += f"{idx[0]}\n"
     graphString += "}"
     import subprocess
+
     subprocess.run(["dot", "-Tpng", "-o", path], input=graphString.encode())
-    print (f"See {path}")
+    print(f"See {path}")
