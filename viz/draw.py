@@ -43,5 +43,5 @@ def draw_graph(mat: np.array, path: str, label_name=""):
     graphString += "}"
     import subprocess
 
-    subprocess.run(["dot", "-Tpng", "-o", path], input=graphString.encode())
+    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", path], input=graphString.encode())
     print(f"See {path}")
