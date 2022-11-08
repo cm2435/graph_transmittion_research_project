@@ -15,8 +15,15 @@ def plot_saturation(
     timesteps = [x for x in range(
         len(saturation_fraction_mean))] if timesteps is None else timesteps
 
+    def logistic(x, k, x0):
+        return 1.0 / (1.0 + np.exp(-k * (x - x0)))
+
+    from scipy.optimize import curve_fit
+    p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+    print(p)
     fig = plt.figure(figsize=(12, 8))
     plt.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
+    plt.plot(timesteps, logistic(timesteps, *p), label="logistic")
     plt.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
                      saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
     plt.xlabel(f'Number of timesteps')
