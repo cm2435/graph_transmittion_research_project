@@ -37,15 +37,6 @@ class DebugStatic(GraphGenerator):
         return debug_graph
 
 
-class BarabasiAlbert(GraphGenerator):
-    name = "barabasi_albert"
-
-    def adj_matrix(self):
-        import networkx as nx
-
-        graph = nx.barabasi_albert_graph(self.num_nodes, 2)
-        return nx.to_numpy_array(graph)
-
 
 class CycleGraph(GraphGenerator):
     name = "cycle_generator"
@@ -57,8 +48,31 @@ class CycleGraph(GraphGenerator):
         return nx.to_numpy_array(graph)
 
 
+class BarabasiAlbert(GraphGenerator):
+    def __init__(self, num_nodes : int, structure_name : str = "barabasi_albert"):
+        super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        self.structure_name = structure_name
+
+    def adj_matrix(self):
+        import networkx as nx
+        graph = nx.barabasi_albert_graph(self.num_nodes, 5)
+        return nx.to_numpy_array(graph)
+
+
+class ConfigurationGraph(GraphGenerator):
+    def __init__(self, num_nodes : int, structure_name : str = "configuration"):
+        super(ConfigurationGraph, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        self.structure_name = structure_name
+
+    def adj_matrix(self):
+        import networkx as nx
+        sequence = nx.random_powerlaw_tree_sequence(self.num_nodes,tries=5000)
+        graph = nx.configuration_model(sequence)
+        return nx.to_numpy_array(graph)
+
+
 class RandomSparse(GraphGenerator):
-    def __init__(self, structure_name, num_nodes):
+    def __init__(self, num_nodes : int, structure_name : str = "random_sparse"):
         super(RandomSparse, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
 
@@ -88,42 +102,24 @@ class FullyConnected(GraphGenerator):
         return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 
 
-
 class GraphStructureGenerator(object):
     """ """
 
     def __init__(self, structure_name: str, num_nodes: int = 20):
         self.structure_name = structure_name
         self.num_nodes = num_nodes
-        self.allowed_structures = ["fully_connected", "random_sparse"]
+        self.allowed_structures = ["fully_connected", "random_sparse", "barabasi_albert", "configuration"]
 
     @property
     def adj_matrix(self):
         """ """
         graph_mapping = {
-            "fully_connected": FullyConnected(structure_name= "fully_connected", num_nodes= self.num_nodes),
-            "random_sparse":  RandomSparse(structure_name= "random_sparse", num_nodes= self.num_nodes),
+            "fully_connected": FullyConnected(num_nodes= self.num_nodes),
+            "random_sparse":  RandomSparse(num_nodes= self.num_nodes),
+            "barabasi_albert" : BarabasiAlbert(num_nodes= self.num_nodes),
+            "configuration" : ConfigurationGraph(num_nodes= self.num_nodes)
         }
         return graph_mapping[self.structure_name].adj_matrix
-
-    def generate_fully_connected_graph(self):
-        """ """
-        return np.ones((self.num_nodes, self.num_nodes))
-
-    def generate_sparse_graph(self, num_edges: int = 5) -> np.ndarray:
-        """
-        Generate a random num_node by num_node adjacency matrix that is seeded with
-        num_timestep_edges connections in an otherwise sparse graph.
-        """
-        uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
-        for _ in range(num_edges):
-            random_i, random_j = random.randint(0, self.num_nodes - 1), random.randint(
-                0, self.num_nodes - 1
-            )
-            uninfected_graph[random_i][random_j] = 1
-
-        return uninfected_graph
-
 
 #if __name__ == "__main__":
 #    x = RandomSparse(structure_name= "random_sparse", num_nodes= 50)

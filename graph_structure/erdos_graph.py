@@ -69,7 +69,7 @@ class ErdosGraphSimulator(object):
             current_infection_matrix = infection_matrix_list[-1]
             
             #TODO fix me so the interface is constant
-            adj_matrix = self.graph_generator.adj_matrix() if self.structure_name == "fully_connected" else self.graph_generator.adj_matrix
+            adj_matrix = self.graph_generator.adj_matrix if self.structure_name == "random_sparse"  else self.graph_generator.adj_matrix()
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
             for pair in nodepair_list:
                 if (
