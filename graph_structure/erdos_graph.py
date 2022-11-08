@@ -21,6 +21,7 @@ class ErdosGraphSimulator(object):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.num_timestep_edges = num_timestep_edges
+        self.structure_name = structure_name
 
         self.graph_generator = GraphStructureGenerator(
             structure_name=structure_name, num_nodes=num_nodes
@@ -66,11 +67,10 @@ class ErdosGraphSimulator(object):
         ):
             timesteps_to_full_saturation += 1
             current_infection_matrix = infection_matrix_list[-1]
-
-            # adj_matrix = self.generate_adj_matrix()
-            adj_matrix = self.graph_generator.adj_matrix
+            
+            #TODO fix me so the interface is constant
+            adj_matrix = self.graph_generator.adj_matrix() if self.structure_name == "fully_connected" else self.graph_generator.adj_matrix
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
-
             for pair in nodepair_list:
                 if (
                     current_infection_matrix[pair[0]]

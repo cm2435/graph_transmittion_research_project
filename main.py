@@ -21,7 +21,7 @@ def simulate_saturation(params) -> Tuple[List[float], List[float]]:
         structure_name=structure_name,
     )
     _, iterations, fraction_infected = x.infect_till_saturation(
-        infection_probability=0.002
+        infection_probability=1
     )
     return iterations, fraction_infected
 
