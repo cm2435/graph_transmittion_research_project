@@ -29,7 +29,8 @@ def draw_graph(mat: np.array, path: str, label_name=""):
     # If we think it's undirected then we only iterate the
     # matrix elements above the diagonal
     explain = "(assumed undirected)" if assumeUndirected else ""
-    graphString += f'label = "{label_name} {explain} " \n'
+    from datetime import datetime
+    graphString += f'label = "{label_name} {explain} - {datetime.now()}" \n'
     spliced = np.triu(mat) if assumeUndirected else mat
     it = np.nditer(spliced, flags=["multi_index"])
     # To draw a directed graph properly in DOT a different symbol is needed

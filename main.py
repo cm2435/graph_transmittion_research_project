@@ -29,8 +29,8 @@ def simulate_saturation(params) -> Tuple[List[float], List[float]]:
 # run main.py gen-graph
 def genAndViz(args, conf) -> None:
     import subprocess
-
-    for structure in GraphGenerator.get_graph_names():
+    from multiprocessing.pool import ThreadPool as Pool
+    def job(structure):
         RecClass = GraphGenerator.from_string(structure)
         gen = RecClass(structure, int(conf["RUN"]["nodes"]))
         mat = gen.adj_matrix()
@@ -39,6 +39,8 @@ def genAndViz(args, conf) -> None:
 
         full = os.path.join(conf["VIZ"]["output_dir"], structure + ".png")
         viz.draw.draw_graph(mat, path=full, label_name=structure)
+    with Pool() as pool:
+        pool.map(job, GraphGenerator.get_graph_names())
     return None 
 
 
