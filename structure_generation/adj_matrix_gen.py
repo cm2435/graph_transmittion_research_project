@@ -15,9 +15,11 @@ class GraphGenerator(abc.ABC):
     def adj_matrix(self):
         pass
 
+    @staticmethod
     def get_graph_names():
         return [x.name for x in GraphGenerator.__subclasses__()]
 
+    @staticmethod
     def from_string(name: str):
         try:
             return next(
