@@ -81,7 +81,7 @@ class ErdosGraphSimulator(object):
 
     def infect_till_saturation(
         self, infection_probability: float = 1
-    ) -> Tuple[np.ndarray, int]:
+    ) -> Tuple[List, int, List]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
         in a graph structure.
