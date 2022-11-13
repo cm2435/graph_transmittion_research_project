@@ -28,6 +28,7 @@ class GraphGenerator(abc.ABC):
         except:
             assert False
 
+
 class DebugStatic(GraphGenerator):
     name = "debug_static"
 
@@ -35,7 +36,6 @@ class DebugStatic(GraphGenerator):
         debug_graph = np.zeros((self.num_nodes, self.num_nodes))
         debug_graph[1, 2] = 1
         return debug_graph
-
 
 
 class CycleGraph(GraphGenerator):
@@ -49,6 +49,9 @@ class CycleGraph(GraphGenerator):
 
 
 class BarabasiAlbert(GraphGenerator):
+    '''
+    '''
+    name = "barabasi_albert"
     def __init__(self, num_nodes : int, structure_name : str = "barabasi_albert"):
         super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
@@ -60,6 +63,9 @@ class BarabasiAlbert(GraphGenerator):
 
 
 class ConfigurationGraph(GraphGenerator):
+    '''
+    '''
+    name = "configuration"
     def __init__(self, num_nodes : int, structure_name : str = "configuration"):
         super(ConfigurationGraph, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
@@ -72,6 +78,8 @@ class ConfigurationGraph(GraphGenerator):
 
 
 class RandomSparse(GraphGenerator):
+    '''
+    '''
     def __init__(self, num_nodes : int, structure_name : str = "random_sparse"):
         super(RandomSparse, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
@@ -91,8 +99,11 @@ class RandomSparse(GraphGenerator):
 
         return uninfected_graph
 
-
+x = "fuck"
 class FullyConnected(GraphGenerator):
+    '''
+    '''
+    name = "fully_connected"
     def __init__(self, num_nodes: int, structure_name : str = "fully_connected"): 
         super(FullyConnected, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
