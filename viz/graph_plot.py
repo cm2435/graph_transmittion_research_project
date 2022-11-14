@@ -9,7 +9,7 @@ def plot_saturation(
     saturation_fraction_std: np.ndarray,
     timesteps: np.array = None,
     graph_type: str = "fully_connected",
-    save_filename: bool = None
+    save_filename: bool = False
 ):
 
     timesteps = [x for x in range(
@@ -17,6 +17,8 @@ def plot_saturation(
 
     def logistic(x, k, x0):
         return 1.0 / (1.0 + np.exp(-k * (x - x0)))
+
+    print(saturation_fraction_mean)
 
     from scipy.optimize import curve_fit
     p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
