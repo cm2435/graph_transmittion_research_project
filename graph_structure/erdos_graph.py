@@ -7,7 +7,7 @@ import scipy
 import pandas as pd
 import itertools
 
-from ..structure_generation.adj_matrix_gen import GraphStructureGenerator
+from structure_generation.adj_matrix_gen import GraphStructureGenerator
 
 class ErdosGraphSimulator(object):
     """ """
@@ -18,10 +18,11 @@ class ErdosGraphSimulator(object):
         num_timestep_edges: int = 4,
         structure_name : str = "fully_connected"
     ):
-        self.num_nodes = num_nodes
-        self.num_agents = num_agents
-        self.num_timestep_edges = num_timestep_edges
-        self.graph_generator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
+        self.num_nodes: int = num_nodes
+        self.num_agents: int = num_agents
+        self.num_timestep_edges: int = num_timestep_edges
+        self.graph_generator: GraphStructureGenerator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
+
 
     @property
     def infection_matrix(self) -> np.ndarray:

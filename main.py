@@ -85,6 +85,7 @@ if __name__ == "__main__":
     num_initial_agents = int(conf["initial_agents"])
     num_nodes = int(conf["nodes"])
     structure_name = conf["structure"]
+    simulation_iters = int(conf['simulation_iterations'])
 
     if parsedArgs.cmd is not None:
         parsedArgs.func(parsedArgs, configuration)
@@ -93,11 +94,10 @@ if __name__ == "__main__":
     simulation_output = []
 
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
-        num_simulation_steps = 2500
         iterThis = itertools.repeat(
-            (num_nodes, num_initial_agents, structure_name), num_simulation_steps
+            (num_nodes, num_initial_agents, structure_name), simulation_iters
         )
-        with tqdm.tqdm(total=num_simulation_steps) as pbar:
+        with tqdm.tqdm(total=simulation_iters) as pbar:
             for _ in p.imap_unordered(simulate_saturation, iterThis):
                 pbar.update()
                 simulation_output.append(_)

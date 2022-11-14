@@ -8,8 +8,8 @@ class GraphGenerator(abc.ABC):
     """ """
 
     def __init__(self, structure_name: str, num_nodes: int = 20):
-        self.structure_name = structure_name
-        self.num_nodes = num_nodes
+        self.structure_name: str = structure_name
+        self.num_nodes: int = num_nodes
 
     @abc.abstractmethod
     def adj_matrix(self):
@@ -56,7 +56,7 @@ class BarabasiAlbert(GraphGenerator):
         super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
 
-    def adj_matrix(self):
+    def adj_matrix(self) -> np.ndarray:
         import networkx as nx
         graph = nx.barabasi_albert_graph(self.num_nodes, 5)
         return nx.to_numpy_array(graph)
@@ -99,7 +99,6 @@ class RandomSparse(GraphGenerator):
 
         return uninfected_graph
 
-x = "fuck"
 class FullyConnected(GraphGenerator):
     '''
     '''
@@ -117,12 +116,12 @@ class GraphStructureGenerator(object):
     """ """
 
     def __init__(self, structure_name: str, num_nodes: int = 20):
-        self.structure_name = structure_name
-        self.num_nodes = num_nodes
-        self.allowed_structures = ["fully_connected", "random_sparse", "barabasi_albert", "configuration"]
+        self.structure_name: str = structure_name
+        self.num_nodes: int = num_nodes
+        self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration"]
 
     @property
-    def adj_matrix(self):
+    def adj_matrix(self) -> np.ndarray:
         """ """
         graph_mapping = {
             "fully_connected": FullyConnected(num_nodes= self.num_nodes),
