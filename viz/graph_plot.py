@@ -18,11 +18,9 @@ def plot_saturation(
     def logistic(x, k, x0):
         return 1.0 / (1.0 + np.exp(-k * (x - x0)))
 
-    print(saturation_fraction_mean)
 
     from scipy.optimize import curve_fit
     p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
-    print(p)
     fig = plt.figure(figsize=(12, 8))
     plt.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
     plt.plot(timesteps, logistic(timesteps, *p), label="logistic")

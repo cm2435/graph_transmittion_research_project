@@ -2,7 +2,7 @@ import numpy as np
 import random
 import abc
 import networkx as nx
-
+from typing import Type
 
 class GraphGenerator(abc.ABC):
     """ """
@@ -112,13 +112,48 @@ class FullyConnected(GraphGenerator):
         return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 
 
+class RandomGeometric(GraphGenerator):
+    '''
+    '''
+    name = "random_geometric"
+    def __init__(self, num_nodes: int, structure_name : str = "random_geometric"): 
+        super(RandomGeometric, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        self.structure_name = structure_name
+        self.node_mean = 0 
+        self.node_std = 2
+
+    @property
+    def adj_matrix(self) -> np.ndarray:
+        import random
+        pos = {i: 
+            (random.gauss(self.node_mean, self.node_std), random.gauss(self.node_mean, self.node_std))
+            for i in range(self.num_nodes)
+        }
+
+        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.2, pos=pos))
+
+class SparseErdos(GraphGenerator):
+    '''
+    '''
+    name = "erdos_sparse"
+    def __init__(self, num_nodes: int, structure_name : str = "erdos_sparse"): 
+        super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        self.structure_name = structure_name
+        self.edge_prob = 0.001
+        self.node_std = 2
+
+    @property
+    def adj_matrix(self) -> np.ndarray:
+        import random
+        return nx.to_numpy_array(nx.fast_gnp_random_graph(self.num_nodes, self.edge_prob, seed=None, directed=False))
+
 class GraphStructureGenerator(object):
     """ """
 
     def __init__(self, structure_name: str, num_nodes: int = 20):
         self.structure_name: str = structure_name
         self.num_nodes: int = num_nodes
-        self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration"]
+        self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]
 
     @property
     def adj_matrix(self) -> np.ndarray:
@@ -127,8 +162,11 @@ class GraphStructureGenerator(object):
             "fully_connected": FullyConnected(num_nodes= self.num_nodes),
             "random_sparse":  RandomSparse(num_nodes= self.num_nodes),
             "barabasi_albert" : BarabasiAlbert(num_nodes= self.num_nodes),
-            "configuration" : ConfigurationGraph(num_nodes= self.num_nodes)
+            "configuration" : ConfigurationGraph(num_nodes= self.num_nodes),
+            "random_geometric" : RandomGeometric(num_nodes= self.num_nodes),
+            "sparse_erdos" : SparseErdos(num_nodes= self.num_nodes)
         }
+        x = graph_mapping[self.structure_name].adj_matrix
         return graph_mapping[self.structure_name].adj_matrix
 
 #if __name__ == "__main__":
