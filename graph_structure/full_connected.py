@@ -63,7 +63,7 @@ class GraphHolder(object):
             graph[augmented_nodepair[0], augmented_nodepair[1]] = 1
         return graph
 
-    def sample_graph_iterative(self):
+    def sample_graph_iterative(self) -> int:
         """
         Iteratively call the method 'sample_single_graph' till the graph reaches
         it's terminal state and measure the time required for this.
@@ -83,15 +83,3 @@ class GraphHolder(object):
         return iterations
 
 
-if __name__ == "__main__":
-    ##TODO abstract simulation variables for cls and simulation to yaml file.
-    import tqdm
-    import multiprocessing
-
-    total_iters = []
-    for i in tqdm.tqdm(range(100)):
-        pool = multiprocessing.pool(4)
-        x = GraphHolder()
-        total_iters.append(x.sample_graph_iterative())
-
-    print(total_iters)
