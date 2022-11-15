@@ -42,8 +42,11 @@ def genAndViz(args, conf) -> None:
 
         full = os.path.join(conf["VIZ"]["output_dir"], structure + ".png")
         viz.draw.draw_graph(mat, path=full, label_name=structure)
-    with Pool() as pool:
-        pool.map(job, GraphGenerator.get_graph_names())
+    if args.graph_name is None:
+        with Pool() as pool:
+            pool.map(job, GraphGenerator.get_graph_names())
+    else:
+        job(args.graph_name)
     return None 
 
 
@@ -78,7 +81,8 @@ if __name__ == "__main__":
         "gen-graph", help="Generate an example graph using each available method"
     )
     graphDebug.set_defaults(func=genAndViz)
-
+    graphDebug.add_argument("--graph", dest="graph_name",
+                            help="Sample & draw a graph only with this name")
     parsedArgs = parser.parse_args()
     configuration.read(parsedArgs.config_file)
 
