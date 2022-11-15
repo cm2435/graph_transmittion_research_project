@@ -128,12 +128,7 @@ class RandomGeometric(GraphGenerator):
         self.initial_adj_matrix = self.generate_adj_matrix()
 
     def generate_adj_matrix(self) -> np.ndarray:
-        import random
-        pos = {i: 
-            (random.gauss(self.node_mean, self.node_std), random.gauss(self.node_mean, self.node_std))
-            for i in range(self.num_nodes)
-        }
-        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.2, pos=pos))
+        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.2))
 
 class SparseErdos(GraphGenerator):
     '''
