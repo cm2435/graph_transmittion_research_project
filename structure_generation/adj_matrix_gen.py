@@ -53,7 +53,7 @@ class BarabasiAlbert(GraphGenerator):
     '''
     name = "barabasi_albert"
     def __init__(self, structure_name: str = "barabasi_albert", num_nodes: int = 50):
-        super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.initial_adj_matrix = self.generate_adj_matrix()
 
@@ -68,7 +68,7 @@ class ConfigurationGraph(GraphGenerator):
     '''
     name = "configuration"
     def __init__(self, structure_name: str = "configuration", num_nodes: int = 50):
-        super(ConfigurationGraph, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.initial_adj_matrix = self.generate_adj_matrix()
     
@@ -84,7 +84,7 @@ class RandomSparse(GraphGenerator):
     '''
     name = "random_sparse"
     def __init__(self, structure_name: str = "random_sparse", num_nodes: int = 50):
-        super(RandomSparse, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.initial_adj_matrix = self.generate_adj_matrix()
 
@@ -108,7 +108,7 @@ class FullyConnected(GraphGenerator):
     '''
     name = "fully_connected"
     def __init__(self, structure_name: str = "fully_connected", num_nodes: int = 50): 
-        super(FullyConnected, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.initial_adj_matrix = self.generate_adj_matrix()
 
@@ -121,7 +121,7 @@ class RandomGeometric(GraphGenerator):
     '''
     name = "random_geometric"
     def __init__(self, structure_name: str = "random_geometric", num_nodes: int = 50): 
-        super(RandomGeometric, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.node_mean = 0 
         self.node_std = 2
@@ -135,7 +135,7 @@ class SparseErdos(GraphGenerator):
     '''
     name = "sparse_erdos"
     def __init__(self, structure_name: str = "sparse_erdos", num_nodes: int = 50): 
-        super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
+        super().__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.edge_prob = 0.01
         assert(self.edge_prob >= 0 and self.edge_prob <= 1)
         self.initial_adj_matrix = self.generate_adj_matrix()
