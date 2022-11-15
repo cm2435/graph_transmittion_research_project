@@ -25,7 +25,7 @@ class GraphGenerator(abc.ABC):
         self.num_nodes: int = num_nodes
 
     @abc.abstractmethod
-    def adj_matrix(self):
+    def generate_adj_matrix(self):
         pass
 
     @staticmethod
@@ -68,8 +68,9 @@ class BarabasiAlbert(GraphGenerator):
     def __init__(self, num_nodes : int, structure_name : str = "barabasi_albert"):
         super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
+        self.adj_matrix = self.generate_adj_matrix()
 
-    def adj_matrix(self) -> np.ndarray:
+    def generate_adj_matrix(self) -> np.ndarray:
         import networkx as nx
         graph = nx.barabasi_albert_graph(self.num_nodes, 5)
         return nx.to_numpy_array(graph)
@@ -83,7 +84,7 @@ class ConfigurationGraph(GraphGenerator):
         super(ConfigurationGraph, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.adj_matrix = self.generate_adj_matrix()
-
+    
     def generate_adj_matrix(self) -> np.ndarray:
         import networkx as nx
         sequence = nx.random_powerlaw_tree_sequence(self.num_nodes,tries=5000)
@@ -94,6 +95,7 @@ class ConfigurationGraph(GraphGenerator):
 class RandomSparse(GraphGenerator):
     '''
     '''
+    name = "random_sparse"
     def __init__(self, num_nodes : int, structure_name : str = "random_sparse"):
         super(RandomSparse, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
@@ -121,7 +123,7 @@ class FullyConnected(GraphGenerator):
         super(FullyConnected, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
         self.adj_matrix = self.generate_adj_matrix()
-        
+
     def generate_adj_matrix(self) -> np.ndarray:
         return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 
@@ -135,9 +137,9 @@ class RandomGeometric(GraphGenerator):
         self.structure_name = structure_name
         self.node_mean = 0 
         self.node_std = 2
+        self.adj_matrix = self.generate_adj_matrix()
 
-    @property
-    def adj_matrix(self) -> np.ndarray:
+    def generate_adj_matrix(self) -> np.ndarray:
         import random
         pos = {i: 
             (random.gauss(self.node_mean, self.node_std), random.gauss(self.node_mean, self.node_std))
@@ -153,12 +155,12 @@ class SparseErdos(GraphGenerator):
     def __init__(self, num_nodes: int, structure_name : str = "sparse_erdos"): 
         super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
-    
         self.edge_prob = 500 / self.num_nodes ** 2
         self.node_std = 2
 
-    @property
-    def adj_matrix(self) -> np.ndarray:
+        self.adj_matrix = self.generate_adj_matrix()
+
+    def generate_adj_matrix(self) -> np.ndarray:
         import random
         return nx.to_numpy_array(nx.fast_gnp_random_graph(self.num_nodes, self.edge_prob, seed=None, directed=False))
 
@@ -287,7 +289,6 @@ class ErdosGraphSimulator(object):
         initial_infection_matrix = np.zeros((self.num_nodes, self.num_nodes))
         #print(initial_infection_matrix)
         infection_matrix_list = [self.infection_matrix]
-        print(infection_matrix_list)
         timesteps_to_full_saturation = 0
         fraction_infected = []
         while (
@@ -295,7 +296,7 @@ class ErdosGraphSimulator(object):
         ):
             timesteps_to_full_saturation += 1
             current_infection_matrix = infection_matrix_list[-1]
-            assert current_infection_matrix[-1] == current_infection_matrix[-2]
+            print(current_infection_matrix[-1] == current_infection_matrix[-2])
             #adj_matrix = self.generate_adj_matrix()
             adj_matrix = self.graph_generator.adj_matrix
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
