@@ -99,6 +99,7 @@ class RandomSparse(GraphGenerator):
                 0, self.num_nodes - 1
             )
             uninfected_graph[random_i][random_j] = 1
+            uninfected_graph[random_j][random_i] = 1
 
         return uninfected_graph
 
@@ -132,7 +133,6 @@ class RandomGeometric(GraphGenerator):
             (random.gauss(self.node_mean, self.node_std), random.gauss(self.node_mean, self.node_std))
             for i in range(self.num_nodes)
         }
-
         return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.2, pos=pos))
 
 class SparseErdos(GraphGenerator):
@@ -141,7 +141,6 @@ class SparseErdos(GraphGenerator):
     name = "sparse_erdos"
     def __init__(self, num_nodes: int, structure_name : str = "sparse_erdos"): 
         super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
-        self.structure_name = structure_name
         self.edge_prob = 500 / self.num_nodes ** 2
         self.node_std = 2
 
@@ -155,7 +154,6 @@ class GraphStructureGenerator(object):
     """ """
 
     def __init__(self, structure_name: str, num_nodes: int = 20):
-        self.structure_name: str = structure_name
         self.num_nodes: int = num_nodes
         self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix

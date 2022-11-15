@@ -15,14 +15,14 @@ import gc
 
 def simulate_saturation(params) -> Tuple[List[float], List[float]]:
     # I hate this
-    num_nodes, num_initial_agents, structure_name, transmittion_prob = params
+    num_nodes, num_initial_agents, structure_name, transmittion_prob, max_iters = params
     x = ErdosGraphSimulator(
         num_nodes=num_nodes,
         num_agents=num_initial_agents,
         structure_name=structure_name,
     )
     _, iterations, fraction_infected = x.infect_till_saturation(
-        infection_probability= transmittion_prob
+        infection_probability= transmittion_prob, max_iters = max_iters
     )
     del x, _ 
     gc.collect()
@@ -89,15 +89,15 @@ if __name__ == "__main__":
     structure_name = conf["structure"]
     simulation_iters = int(conf['simulation_iterations'])
     transmittion_prob = float(conf['transmittion_prob'])
-
+    max_iters = int(conf['max_iterations'])
     if parsedArgs.cmd is not None:
         parsedArgs.func(parsedArgs, configuration)
         exit()
-        
+
     simulation_output = []
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         iterThis = itertools.repeat(
-            (num_nodes, num_initial_agents, structure_name, transmittion_prob), simulation_iters
+            (num_nodes, num_initial_agents, structure_name, transmittion_prob, max_iters), simulation_iters
         )
         with tqdm.tqdm(total=simulation_iters) as pbar:
             for _ in p.imap_unordered(simulate_saturation, iterThis):

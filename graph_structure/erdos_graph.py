@@ -55,7 +55,7 @@ class ErdosGraphSimulator(object):
 
 
     def infect_till_saturation(
-        self, infection_probability: float = 1
+        self, infection_probability: float = 1, max_iters = 50
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -103,7 +103,7 @@ class ErdosGraphSimulator(object):
             infection_matrix_list.append(current_infection_matrix)
             fraction_infected.append(np.count_nonzero(current_infection_matrix == 1) / len(current_infection_matrix))
 
-            if timesteps_to_full_saturation == 15:
+            if timesteps_to_full_saturation == max_iters:
                 break
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
