@@ -151,11 +151,11 @@ class SparseErdos(GraphGenerator):
 class GraphStructureGenerator(object):
     """ """
 
-    def __init__(self, structure_name: str = "sparse_erdos", num_nodes: int = 50):
+    def __init__(self, structure_name: str, num_nodes: int = 50):
         self.num_nodes: int = num_nodes
         self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]
-        self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
         self.structure_name = structure_name
+        self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 
     def get_graph_structure(self) -> np.ndarray:
         """ """
@@ -171,5 +171,5 @@ class GraphStructureGenerator(object):
         return graph_mapping[structure_name](num_nodes = self.num_nodes)
 
 
-#if __name__ == "__main__":
-#    x = RandomSparse(structure_name= "random_sparse", num_nodes= 50)
+if __name__ == "__main__":
+    x = GraphStructureGenerator(structure_name= "random_sparse", num_nodes= 50)
