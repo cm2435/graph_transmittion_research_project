@@ -12,7 +12,7 @@ class GraphGenerator(abc.ABC):
         self.num_nodes: int = num_nodes
 
     @abc.abstractmethod
-    def adj_matrix(self):
+    def generate_adj_matrix(self):
         pass
 
     @staticmethod
@@ -55,10 +55,11 @@ class BarabasiAlbert(GraphGenerator):
     def __init__(self, num_nodes : int, structure_name : str = "barabasi_albert"):
         super(BarabasiAlbert, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
+        self.initial_adj_matrix = self.generate_adj_matrix()
 
-    def adj_matrix(self) -> np.ndarray:
+    def generate_adj_matrix(self) -> np.ndarray:
         import networkx as nx
-        graph = nx.barabasi_albert_graph(self.num_nodes, 5)
+        graph = nx.barabasi_albert_graph(self.num_nodes, 1)
         return nx.to_numpy_array(graph)
 
 
@@ -69,10 +70,11 @@ class ConfigurationGraph(GraphGenerator):
     def __init__(self, num_nodes : int, structure_name : str = "configuration"):
         super(ConfigurationGraph, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
-
-    def adj_matrix(self):
+        self.initial_adj_matrix = self.generate_adj_matrix()
+    
+    def generate_adj_matrix(self) -> np.ndarray:
         import networkx as nx
-        sequence = nx.random_powerlaw_tree_sequence(self.num_nodes,tries=5000)
+        sequence = nx.random_powerlaw_tree_sequence(self.num_nodes,tries=50000)
         graph = nx.configuration_model(sequence)
         return nx.to_numpy_array(graph)
 
@@ -80,12 +82,13 @@ class ConfigurationGraph(GraphGenerator):
 class RandomSparse(GraphGenerator):
     '''
     '''
+    name = "random_sparse"
     def __init__(self, num_nodes : int, structure_name : str = "random_sparse"):
         super(RandomSparse, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
+        self.initial_adj_matrix = self.generate_adj_matrix()
 
-    @property
-    def adj_matrix(self, num_edges : int = 5):
+    def generate_adj_matrix(self, num_edges : int = 5) -> np.ndarray:
         """
         Generate a random num_node by num_node adjacency matrix that is seeded with
         num_timestep_edges connections in an otherwise sparse graph.
@@ -106,9 +109,9 @@ class FullyConnected(GraphGenerator):
     def __init__(self, num_nodes: int, structure_name : str = "fully_connected"): 
         super(FullyConnected, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
+        self.initial_adj_matrix = self.generate_adj_matrix()
 
-    @property
-    def adj_matrix(self):
+    def generate_adj_matrix(self) -> np.ndarray:
         return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 
 
@@ -121,9 +124,9 @@ class RandomGeometric(GraphGenerator):
         self.structure_name = structure_name
         self.node_mean = 0 
         self.node_std = 2
+        self.initial_adj_matrix = self.generate_adj_matrix()
 
-    @property
-    def adj_matrix(self) -> np.ndarray:
+    def generate_adj_matrix(self) -> np.ndarray:
         import random
         pos = {i: 
             (random.gauss(self.node_mean, self.node_std), random.gauss(self.node_mean, self.node_std))
@@ -135,15 +138,16 @@ class RandomGeometric(GraphGenerator):
 class SparseErdos(GraphGenerator):
     '''
     '''
-    name = "erdos_sparse"
-    def __init__(self, num_nodes: int, structure_name : str = "erdos_sparse"): 
+    name = "sparse_erdos"
+    def __init__(self, num_nodes: int, structure_name : str = "sparse_erdos"): 
         super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
         self.structure_name = structure_name
-        self.edge_prob = 0.001
+        self.edge_prob = 500 / self.num_nodes ** 2
         self.node_std = 2
 
-    @property
-    def adj_matrix(self) -> np.ndarray:
+        self.initial_adj_matrix = self.generate_adj_matrix()
+
+    def generate_adj_matrix(self) -> np.ndarray:
         import random
         return nx.to_numpy_array(nx.fast_gnp_random_graph(self.num_nodes, self.edge_prob, seed=None, directed=False))
 
@@ -154,20 +158,21 @@ class GraphStructureGenerator(object):
         self.structure_name: str = structure_name
         self.num_nodes: int = num_nodes
         self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]
+        self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 
-    @property
-    def adj_matrix(self) -> np.ndarray:
+    def get_graph_structure(self) -> np.ndarray:
         """ """
+        structure_name = self.structure_name
         graph_mapping = {
-            "fully_connected": FullyConnected(num_nodes= self.num_nodes),
-            "random_sparse":  RandomSparse(num_nodes= self.num_nodes),
-            "barabasi_albert" : BarabasiAlbert(num_nodes= self.num_nodes),
-            "configuration" : ConfigurationGraph(num_nodes= self.num_nodes),
-            "random_geometric" : RandomGeometric(num_nodes= self.num_nodes),
-            "sparse_erdos" : SparseErdos(num_nodes= self.num_nodes)
+            "fully_connected": FullyConnected,
+            "random_sparse":  RandomSparse,
+            "barabasi_albert" : BarabasiAlbert,
+            "configuration" : ConfigurationGraph,
+            "random_geometric" : RandomGeometric,
+            "sparse_erdos" : SparseErdos,
         }
-        x = graph_mapping[self.structure_name].adj_matrix
-        return graph_mapping[self.structure_name].adj_matrix
+        return graph_mapping[structure_name](num_nodes = self.num_nodes)
+
 
 #if __name__ == "__main__":
 #    x = RandomSparse(structure_name= "random_sparse", num_nodes= 50)

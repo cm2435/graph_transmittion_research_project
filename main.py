@@ -11,6 +11,7 @@ from structure_generation.adj_matrix_gen import *
 from collections import namedtuple
 from typing import Optional, Tuple, List 
 from viz.graph_plot import plot_saturation
+import gc
 
 def simulate_saturation(params) -> Tuple[List[float], List[float]]:
     # I hate this
@@ -23,6 +24,8 @@ def simulate_saturation(params) -> Tuple[List[float], List[float]]:
     _, iterations, fraction_infected = x.infect_till_saturation(
         infection_probability= transmittion_prob
     )
+    del x, _ 
+    gc.collect()
     return iterations, fraction_infected
 
 
@@ -90,9 +93,8 @@ if __name__ == "__main__":
     if parsedArgs.cmd is not None:
         parsedArgs.func(parsedArgs, configuration)
         exit()
-    # num_initial_agents, num_nodes, structure_name = 1, 20, "fully_connected"
+        
     simulation_output = []
-
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         iterThis = itertools.repeat(
             (num_nodes, num_initial_agents, structure_name, transmittion_prob), simulation_iters
