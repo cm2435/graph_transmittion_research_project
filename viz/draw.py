@@ -38,8 +38,8 @@ def draw_graph(mat: np.array, path: str, label_name=""):
     """
 
     assumeUndirected = (mat == mat.T).all()
-
-    graphString = "graph { " if assumeUndirected else "digraph { "
+    components = find_components(mat)
+    graphString = "graph { " if assumeUndirected else "digraph { \n"
     # neato supports non-overlapping w/ splines
     graphString += "graph [layout=neato, overlap=false, splines=true]"
 
@@ -55,6 +55,8 @@ def draw_graph(mat: np.array, path: str, label_name=""):
     it = np.nditer(spliced, flags=["multi_index"])
     # To draw a directed graph properly in DOT a different symbol is needed
     conString = "--" if assumeUndirected else "->"
+    for idx in range(mat.shape[0]):
+        graphString += f"{idx} [label=\"{components[idx]}\"]\n"
     for x in it:
         idx = it.multi_index
         if x == 1:
