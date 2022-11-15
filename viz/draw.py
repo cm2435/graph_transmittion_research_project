@@ -3,6 +3,26 @@ from cProfile import label
 import numpy as np
 from pathlib import Path
 
+def find_components(mat: np.array) -> np.array:
+    '''
+        Given an input adjacency matrix, the connected components of the graph
+        are found and returned as a list of component numbers indexed by the node.
+    '''
+    out = np.zeros(shape=mat.shape[0], dtype=np.int8)
+    from scipy.cluster.hierarchy import DisjointSet
+    set = DisjointSet(range(mat.shape[0]))
+    tri = np.triu(mat)
+    it = np.nditer(mat, flags=["multi_index"])
+    # To draw a directed graph properly in DOT a different symbol is needed
+    for x in it:
+        idx = it.multi_index
+        if x == 1:
+            # This is a connection between nodes
+            set.merge(idx[0], idx[1])
+    for idx, subset in enumerate(set.subsets()):
+        for i in subset:
+            out[i] = idx
+    return out
 # Draw a picture of an adjacency matrix. No customization, aims to do the right thing.
 #   mat: adjacency matrix
 def draw_graph(mat: np.array, path: str, label_name=""):
