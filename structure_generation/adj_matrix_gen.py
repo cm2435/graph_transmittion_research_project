@@ -128,7 +128,7 @@ class RandomGeometric(GraphGenerator):
         self.initial_adj_matrix = self.generate_adj_matrix()
 
     def generate_adj_matrix(self) -> np.ndarray:
-        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.2))
+        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.05))
 
 class SparseErdos(GraphGenerator):
     '''
