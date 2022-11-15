@@ -36,7 +36,7 @@ def genAndViz(args, conf) -> None:
     def job(structure):
         RecClass = GraphGenerator.from_string(structure)
         gen = RecClass(structure, int(conf["RUN"]["nodes"]))
-        mat = gen.adj_matrix()
+        mat = gen.generate_adj_matrix()
         import viz.draw
         import os
 
