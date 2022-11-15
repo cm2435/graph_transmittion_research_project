@@ -157,7 +157,7 @@ class GraphStructureGenerator(object):
         self.num_nodes: int = num_nodes
         self.allowed_structures: list[str] = ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
-
+        self.structure_name = structure_name
     def get_graph_structure(self) -> np.ndarray:
         """ """
         structure_name = self.structure_name
