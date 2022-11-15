@@ -12,26 +12,40 @@ def plot_saturation(
     save_filename: bool = False
 ):
 
-    timesteps = [x for x in range(
-        len(saturation_fraction_mean))] if timesteps is None else timesteps
+    timesteps = np.array([x for x in range(
+        len(saturation_fraction_mean))] if timesteps is None else timesteps)
 
     def logistic(x, k, x0):
         return 1.0 / (1.0 + np.exp(-k * (x - x0)))
+    grad = np.gradient(saturation_fraction_mean)
+    def main_curve(axis):
+        from scipy.optimize import curve_fit
+        p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+        fig = plt.figure(figsize=(12, 8))
+        axis.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
+        ax2 = axis.twinx()
+        ax2.plot(timesteps, grad, label="d/dt saturation")
+        ax2.set(ylabel="Gradient")
+        ax2.legend()
+        axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        axis.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
+                        saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
+        axis.set(xlabel=f'Number of timesteps')
+        axis.set(ylabel=f'Fraction saturated')
+        axis.legend()
+    def gradient_curves(axis):
+        axis.set(xlabel='Saturation', ylabel='Gradient')
+        axis.plot(saturation_fraction_mean, grad)
+    fig, axes = plt.subplots(1, 2)
 
-
-    from scipy.optimize import curve_fit
-    p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
-    fig = plt.figure(figsize=(12, 8))
-    plt.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
-    plt.plot(timesteps, logistic(timesteps, *p), label="logistic")
-    plt.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
-                     saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
-    plt.xlabel(f'Number of timesteps')
-    plt.ylabel(f'Fraction saturated')
-    plt.legend()
+    fig.set_size_inches(8, 4.5)
+    main_curve(axes.flat[0])
+    gradient_curves(axes.flat[1])
+    fig.tight_layout()
+    #ßfig.subplots_adjust(top=0.1, left=0.1)
     from datetime import datetime
     # Move this to somewhere else
-    plt.title(f"{graph_type}, plotted on {str(datetime.now())}")
+    fig.suptitle(f"{graph_type}, plotted on {str(datetime.now())}")
     # plt.show()
     if save_filename:
         fig.savefig(
