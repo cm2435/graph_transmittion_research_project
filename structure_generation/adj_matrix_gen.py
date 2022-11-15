@@ -136,7 +136,8 @@ class SparseErdos(GraphGenerator):
     name = "sparse_erdos"
     def __init__(self, structure_name: str = "sparse_erdos", num_nodes: int = 50): 
         super(SparseErdos, self).__init__(structure_name= structure_name, num_nodes = num_nodes)
-        self.edge_prob = 500 / self.num_nodes ** 2
+        self.edge_prob = 0.01
+        assert(self.edge_prob >= 0 and self.edge_prob <= 1)
         self.initial_adj_matrix = self.generate_adj_matrix()
 
     def generate_adj_matrix(self) -> np.ndarray:
