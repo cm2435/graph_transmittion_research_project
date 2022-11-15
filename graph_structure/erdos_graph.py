@@ -16,6 +16,7 @@ import random
 import abc
 import networkx as nx
 from typing import Type
+import gc
 
 class GraphGenerator(abc.ABC):
     """ """
@@ -175,15 +176,17 @@ class GraphStructureGenerator(object):
     @property
     def adj_matrix(self) -> np.ndarray:
         """ """
+        structure_name = self.structure_name
         graph_mapping = {
-            "fully_connected": FullyConnected(num_nodes= self.num_nodes),
-            "random_sparse":  RandomSparse(num_nodes= self.num_nodes),
-            "barabasi_albert" : BarabasiAlbert(num_nodes= self.num_nodes),
-            "configuration" : ConfigurationGraph(num_nodes= self.num_nodes),
-            "random_geometric" : RandomGeometric(num_nodes= self.num_nodes),
-            "sparse_erdos" : SparseErdos(num_nodes= self.num_nodes)
+            "fully_connected": FullyConnected,
+            "random_sparse":  RandomSparse,
+            "barabasi_albert" : BarabasiAlbert,
+            "configuration" : ConfigurationGraph,
+            "random_geometric" : RandomGeometric,
+            "sparse_erdos" : SparseErdos,
         }
-        return graph_mapping[self.structure_name].adj_matrix
+        adj_matrix =  graph_mapping[structure_name](num_nodes = self.num_nodes).adj_matrix
+        return adj_matrix
 
 #if __name__ == "__main__":
 #    x = RandomSparse(structure_name= "random_sparse", num_nodes= 50)
@@ -196,14 +199,14 @@ class ErdosGraphSimulator(object):
         self, num_nodes: int = 250, 
         num_agents: int = 1,
         num_timestep_edges: int = 5,
-        structure_name : str = "sparse_erdos"
+        structure_name : str = "random_sparse"
     ):
 
+        self.structure_name = structure_name
         self.num_nodes: int = num_nodes
         self.num_agents: int = num_agents
         self.num_timestep_edges: int = num_timestep_edges
         self.graph_generator: GraphStructureGenerator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
-
 
     @property
     def infection_matrix(self) -> np.ndarray:
@@ -283,7 +286,6 @@ class ErdosGraphSimulator(object):
         2. If any node edge pairs in the adj matrix are infected, infect their pair with p = infection_probability
         3. Update the infection matrix with any newly infected nodes by index and update timestep
 
-        4. Iterate 1,2,3 untill infection matrix is saturated, then log the number of timesteps needed
 
         """
         initial_infection_matrix = np.zeros((self.num_nodes, self.num_nodes))
@@ -296,8 +298,9 @@ class ErdosGraphSimulator(object):
         ):
             timesteps_to_full_saturation += 1
             current_infection_matrix = infection_matrix_list[-1]
-            print(current_infection_matrix[-1] == current_infection_matrix[-2])
+
             #adj_matrix = self.generate_adj_matrix()
+
             adj_matrix = self.graph_generator.adj_matrix
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
 
@@ -323,6 +326,7 @@ class ErdosGraphSimulator(object):
 
 
 if __name__ == "__main__":
-    x = ErdosGraphSimulator()
+    x = ErdosGraphSimulator(structure_name= "random_sparse")
+    print(x.structure_name)
     t,q,r = x.infect_until_saturation_variable_timesteps()
     print(q)
