@@ -18,9 +18,10 @@ def plot_saturation(
     def logistic(x, k, x0):
         return 1.0 / (1.0 + np.exp(-k * (x - x0)))
     grad = np.gradient(saturation_fraction_mean)
+    
     def main_curve(axis):
         from scipy.optimize import curve_fit
-        p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+        #p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
         fig = plt.figure(figsize=(12, 8))
         axis.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
         ax2 = axis.twinx()
@@ -33,6 +34,7 @@ def plot_saturation(
         axis.set(xlabel=f'Number of timesteps')
         axis.set(ylabel=f'Fraction saturated')
         axis.legend()
+
     def gradient_curves(axis):
         axis.set(xlabel='Saturation', ylabel='Gradient')
         axis.plot(saturation_fraction_mean, grad)
