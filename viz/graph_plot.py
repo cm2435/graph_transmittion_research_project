@@ -15,20 +15,23 @@ def plot_saturation(
     timesteps = np.array([x for x in range(
         len(saturation_fraction_mean))] if timesteps is None else timesteps)
 
-    def logistic(x, k, x0):
-        return 1.0 / (1.0 + np.exp(-k * (x - x0)))
+    def logistic(x, k, x0, A):
+        return A / (1.0 + np.exp(-k * (x - x0)))
     grad = np.gradient(saturation_fraction_mean)
     
     def main_curve(axis):
         from scipy.optimize import curve_fit
-        #p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
         fig = plt.figure(figsize=(12, 8))
         axis.plot(timesteps, saturation_fraction_mean, label=f"{graph_type}, saturation")
         ax2 = axis.twinx()
         ax2.plot(timesteps, grad, label="d/dt saturation")
         ax2.set(ylabel="Gradient")
         ax2.legend()
-        axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        try:
+            p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+            axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        except RuntimeError as e:
+            print(f"{e}")
         axis.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
                         saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
         axis.set(xlabel=f'Number of timesteps')
