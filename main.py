@@ -7,7 +7,7 @@ import tqdm
 import scipy
 import argparse
 from graph_structure.erdos_graph import ErdosGraphSimulator
-from structure_generation.adj_matrix_gen import *
+from structure.adj_matrix_gen import *
 from collections import namedtuple
 from typing import Optional, Tuple, List 
 from viz.graph_plot import plot_saturation
@@ -36,6 +36,7 @@ def genAndViz(args, conf) -> None:
     def job(structure):
         RecClass = GraphGenerator.from_string(structure)
         gen = RecClass(structure, int(conf["RUN"]["nodes"]))
+        assert(gen.structure_name == structure)
         mat = gen.generate_adj_matrix()
         import viz.draw
         import os

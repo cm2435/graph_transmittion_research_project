@@ -9,7 +9,7 @@ import itertools
 from typing import List 
 
 #from structure_generation.adj_matrix_gen import GraphStructureGenerator
-from structure_generation.adj_matrix_gen import GraphStructureGenerator
+from structure.adj_matrix_gen import GraphStructureGenerator
 
 import numpy as np
 import random
