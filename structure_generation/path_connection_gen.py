@@ -122,7 +122,7 @@ class ProceduralGraphGenerator(object):
 
 if __name__ == "__main__":
     global num_edges_per_timestep 
-    num_edges_per_timestep = 4
+    num_edges_per_timestep = 10
 
     for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
         import matplotlib.pyplot as plt 
