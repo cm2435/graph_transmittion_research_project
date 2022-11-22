@@ -6,11 +6,12 @@ import tqdm
 from typing import List, Tuple, Optional
 import networkx as nx 
 import gc
+import os 
 
 class ProceduralGraphGenerator(object):
     '''
     '''
-    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 400, num_agents : int = 1):
+    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 200, num_agents : int = 1):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.initial_structure = initial_structure
@@ -20,10 +21,10 @@ class ProceduralGraphGenerator(object):
         """
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
-        random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
 
-        
+        random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
         initial_graph[random_edge_x][random_edge_y], initial_graph[random_edge_y][random_edge_x]= 1, 1 
+
         return initial_graph
 
     def _make_infection_array(self, largest_subcomponent : np.ndarray) -> np.ndarray:
@@ -43,19 +44,22 @@ class ProceduralGraphGenerator(object):
 
         return infection_arr, fully_saturated_arr
 
-    def _next_structure(self, sampling_graph : np.ndarray, updating_graph : np.ndarray) -> np.ndarray: 
+    def _next_structure(self, sampling_graph : np.ndarray, updating_graph : np.ndarray, num_new_edges_per_timestep : int = 1) -> np.ndarray: 
         '''
         sampling graph : graph to sample new edges from (largest component of structure)
         updating graph : graph to add new randomly chosen edges to 
         '''
         nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
-        nodepair_x, nodepair_y = nodepair_list[random.randint(0, len(nodepair_list) - 1)]
-        updating_graph[nodepair_x][nodepair_y], updating_graph[nodepair_y][[nodepair_x]] = 1, 1
+
+        for _ in range(num_new_edges_per_timestep):
+            nodepair_x, nodepair_y = nodepair_list[random.randint(0, len(nodepair_list) - 1)]
+            updating_graph[nodepair_x][nodepair_y], updating_graph[nodepair_y][[nodepair_x]] = 1, 1
+
         return updating_graph
 
 
     def infect_till_saturation(
-        self, infection_probability: float = 0.05, max_iters = 20000
+        self, infection_probability: float = 0.05, max_iters = 2000
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -90,7 +94,7 @@ class ProceduralGraphGenerator(object):
             timesteps_to_full_saturation += 1
             current_infection_dict = infection_dict_list[-1]
 
-            graph_structure = self._next_structure(sampling_graph= giant_graph, updating_graph= initial_graph)
+            graph_structure = self._next_structure(sampling_graph= giant_graph, updating_graph= initial_graph, )
             #If dynamic graph structure like random sparse, get new adj matrix. If static, stay with the same
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
@@ -117,12 +121,13 @@ class ProceduralGraphGenerator(object):
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
 if __name__ == "__main__":
+    global num_edges_per_timestep 
+    num_edges_per_timestep = 4
 
     for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
-        print(structure_name)
         import matplotlib.pyplot as plt 
 
-        graphgen = GraphStructureGenerator(structure_name= structure_name, num_nodes= 400)
+        graphgen = GraphStructureGenerator(structure_name= structure_name, num_nodes= 200)
         graph = graphgen.initial_adj_matrix
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         
@@ -132,11 +137,14 @@ if __name__ == "__main__":
 
         q,r, t = x.infect_till_saturation()
 
-        import matplotlib.pyplot as plt 
+
         fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
 
-        fig.savefig(f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential/{structure_name}.png")
+        fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
+        if os.path.isdir(fp) is False: 
+            os.makedirs(fp)
+        fig.savefig(f"{fp}/{structure_name}.png")
 
         del plt
         gc.collect()
