@@ -5,11 +5,12 @@ import random
 import tqdm 
 from typing import List, Tuple, Optional
 import networkx as nx 
+import gc
 
 class ProceduralGraphGenerator(object):
     '''
     '''
-    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 200, num_agents : int = 1):
+    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 400, num_agents : int = 1):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.initial_structure = initial_structure
@@ -71,6 +72,7 @@ class ProceduralGraphGenerator(object):
 
         graph = nx.from_numpy_array(self.initial_structure)
         nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
+        print(nx_giant_graph)
         giant_graph = nx.to_numpy_array(nx_giant_graph)
         infection_dict, fully_saturated_dict = self._make_infection_array(giant_graph)
 
@@ -115,20 +117,29 @@ class ProceduralGraphGenerator(object):
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
 if __name__ == "__main__":
-    global num_nodes
-    graphgen = GraphStructureGenerator(structure_name= "random_geometric", num_nodes= 200)
-    graph = graphgen.initial_adj_matrix
-    graph_rand = graphgen.get_graph_structure().initial_adj_matrix
-    
-    x = ProceduralGraphGenerator(graph)
+
+    for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
+        print(structure_name)
+        import matplotlib.pyplot as plt 
+
+        graphgen = GraphStructureGenerator(structure_name= structure_name, num_nodes= 400)
+        graph = graphgen.initial_adj_matrix
+        graph_rand = graphgen.get_graph_structure().initial_adj_matrix
+        
+
+        x = ProceduralGraphGenerator(graph)
 
 
-    q,r, t = x.infect_till_saturation()
+        q,r, t = x.infect_till_saturation()
 
-    import matplotlib.pyplot as plt 
-    plt.plot([x for x in range(len(t))], t)
-    plt.show()
+        import matplotlib.pyplot as plt 
+        fig, ax = plt.subplots()
+        ax.plot([x for x in range(len(t))], t)
 
+        fig.savefig(f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential/{structure_name}.png")
+
+        del plt
+        gc.collect()
     """graph = nx.from_numpy_array(x.initial_structure)
     print(type(graph))
     largest_cc = max(nx.connected_components(graph), key=len)
