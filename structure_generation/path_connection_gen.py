@@ -9,41 +9,52 @@ import networkx as nx
 class ProceduralGraphGenerator(object):
     '''
     '''
-    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 100, num_agents : int = 1):
+    def __init__(self, initial_structure : np.ndarray, num_nodes : int = 200, num_agents : int = 1):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.initial_structure = initial_structure
 
+    def _make_initial_structure(self, giant_graph : np.ndarray):
+        """
+        """
+        initial_graph = np.zeros((self.num_nodes, self.num_nodes))
+        edges = np.dstack(np.where(giant_graph == 1))[0]
+        random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
+
+        
+        initial_graph[random_edge_x][random_edge_y], initial_graph[random_edge_y][random_edge_x]= 1, 1 
+        return initial_graph
+
     def _make_infection_array(self, largest_subcomponent : np.ndarray) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
-        with num_agents number of initial infections
+        with num_agents number of initial infections with the agents in the largest 
         """
-        infection_array = np.zeros(self.num_nodes)
-
         infected_nodes = []
         nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
-        while len(infected_nodes) < self.num_agents:
+        infection_arr = {k : 0 for k in set([x[0] for x in nodepair_list])}
+        fully_saturated_arr = {k : 1 for k in set([x[0] for x in nodepair_list])}
 
+        while len(infected_nodes) < self.num_agents:
             infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
             infected_nodes.append(infection_node)
-            infection_array[infection_node] = 1
+            infection_arr[infection_node] = 1
 
-        return infection_array
+        return infection_arr, fully_saturated_arr
 
-    def _next_structure(self, updating_graph : np.ndarray) -> np.ndarray: 
+    def _next_structure(self, sampling_graph : np.ndarray, updating_graph : np.ndarray) -> np.ndarray: 
         '''
         sampling graph : graph to sample new edges from (largest component of structure)
         updating graph : graph to add new randomly chosen edges to 
         '''
-        nodepair_list = np.dstack(np.where(self.initial_structure == 1))[0]
+        nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
         nodepair_x, nodepair_y = nodepair_list[random.randint(0, len(nodepair_list) - 1)]
-        updating_graph[[nodepair_x, nodepair_y]], updating_graph[[nodepair_y, nodepair_x]] = 1, 1
+        updating_graph[nodepair_x][nodepair_y], updating_graph[nodepair_y][[nodepair_x]] = 1, 1
         return updating_graph
 
 
     def infect_till_saturation(
-        self, infection_probability: float = 1, max_iters = 50
+        self, infection_probability: float = 0.05, max_iters = 20000
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -61,31 +72,29 @@ class ProceduralGraphGenerator(object):
         graph = nx.from_numpy_array(self.initial_structure)
         nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
         giant_graph = nx.to_numpy_array(nx_giant_graph)
-        print(self._make_infection_array(giant_graph))
+        infection_dict, fully_saturated_dict = self._make_infection_array(giant_graph)
 
 
-
-        infection_matrix_list = [self.infection_matrix]
+        infection_dict_list = [infection_dict]
         timesteps_to_full_saturation = 0
-        fraction_infected = []
+        fraction_infected, infection_matrix_list = [], []
         
+        #Make the initial edge structure
+        initial_graph = self._make_initial_structure(giant_graph)
+
         while (
-            np.array_equal(infection_matrix_list[-1], np.ones(self.num_nodes)) is False
+            infection_dict_list[-1] != fully_saturated_dict
         ):
             timesteps_to_full_saturation += 1
-            current_infection_matrix = infection_matrix_list[-1]
-            
-            #If dynamic graph structure like random sparse, get new adj matrix. If static, stay with the same
-            if self.structure_name in self.dynamic_structures:
-                adj_matrix = self.graph_generator.get_graph_structure().initial_adj_matrix
-            else: 
-                adj_matrix = self.graph_generator.initial_adj_matrix
+            current_infection_dict = infection_dict_list[-1]
 
-            nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
+            graph_structure = self._next_structure(sampling_graph= giant_graph, updating_graph= initial_graph)
+            #If dynamic graph structure like random sparse, get new adj matrix. If static, stay with the same
+            nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
-                    current_infection_matrix[pair[0]]
-                    or current_infection_matrix[pair[1]] == 1
+                    current_infection_dict[pair[0]]
+                    or current_infection_dict[pair[1]] == 1
                 ):
                     # Do not always guarrentee infection
                     infection_outcome = np.random.choice(
@@ -93,35 +102,36 @@ class ProceduralGraphGenerator(object):
                     )
                     if infection_outcome == 1:
                         (
-                            current_infection_matrix[pair[0]],
-                            current_infection_matrix[pair[1]],
+                            current_infection_dict[pair[0]],
+                            current_infection_dict[pair[1]],
                         ) = (1, 1)
 
-            infection_matrix_list.append(current_infection_matrix)
-            fraction_infected.append(np.count_nonzero(current_infection_matrix == 1) / len(current_infection_matrix))
+            infection_matrix_list.append(current_infection_dict)
+            fraction_infected.append(sum(value == 1 for value in current_infection_dict.values()) / len(current_infection_dict))
 
+            #print(graph_structure)
             if timesteps_to_full_saturation == max_iters:
                 break
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
 
 if __name__ == "__main__":
-    
-    graphgen = GraphStructureGenerator(structure_name= "sparse_erdos", num_nodes= 100)
+    global num_nodes
+    graphgen = GraphStructureGenerator(structure_name= "random_geometric", num_nodes= 200)
     graph = graphgen.initial_adj_matrix
     graph_rand = graphgen.get_graph_structure().initial_adj_matrix
     
     x = ProceduralGraphGenerator(graph)
 
-    #print(graph_rand)
-    modded_structure = x._next_structure(graph_rand)
-    t = np.vstack(np.where(graph == 1))[0]
-    y = np.vstack(np.where(modded_structure == 1))[0]
 
-    assert len(t) < len(y)
-    x.infect_till_saturation()
+    q,r, t = x.infect_till_saturation()
 
-    graph = nx.from_numpy_array(x.initial_structure)
+    import matplotlib.pyplot as plt 
+    plt.plot([x for x in range(len(t))], t)
+    plt.show()
+
+    """graph = nx.from_numpy_array(x.initial_structure)
     print(type(graph))
     largest_cc = max(nx.connected_components(graph), key=len)
     print(graph)
     print(graph.subgraph(largest_cc))
+"""
