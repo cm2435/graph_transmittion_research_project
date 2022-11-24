@@ -18,8 +18,17 @@ class GraphStructureMutator(object):
 
     def __init__(self, initial_structure: np.ndarray):
         self.initial_structure = initial_structure
+        self.edge_structure: List[Tuple[int, int, int]] = []
 
-        self.node_structure: List[Tuple[int, int, int]] = []
+    def _remove_stale_edges(self, update_timestep: bool = True):
+        """ """
+        if update_timestep:
+            self.edge_structure = list(
+                map(lambda x: (x[0], x[1], x[2] - 1), self.edge_structure)
+            )
+
+        self.edge_structure = [x for x in self.edge_structure if x[2] != 0]
+        pass
 
     def _next_structure_saturation(
         self,
@@ -32,7 +41,6 @@ class GraphStructureMutator(object):
         updating graph : graph to add new randomly chosen edges to
         """
         nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
-
         for _ in range(num_new_edges_per_timestep):
             nodepair_x, nodepair_y = nodepair_list[
                 random.randint(0, len(nodepair_list) - 1)
@@ -41,9 +49,38 @@ class GraphStructureMutator(object):
                 updating_graph[nodepair_x][nodepair_y],
                 updating_graph[nodepair_y][[nodepair_x]],
             ) = (1, 1)
-            self.node_structure.append(
+            self.edge_structure.append(
                 (nodepair_x, nodepair_y, 2147483647)
             )  # For saturation model, timesteps to edge removal should be ostensibly inf
+
+        self._remove_stale_edges()
+        return updating_graph
+
+    def _next_structure_causal(
+        self,
+        sampling_graph: np.ndarray,
+        updating_graph: np.ndarray,
+        num_new_edges_per_timestep: int = 1,
+        generated_edge_lifespan: int = 5,
+    ) -> np.ndarray:
+        """
+        sampling graph : graph to sample new edges from (largest component of structure)
+        updating graph : graph to add new randomly chosen edges to
+        """
+        nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
+        for _ in range(num_new_edges_per_timestep):
+            nodepair_x, nodepair_y = nodepair_list[
+                random.randint(0, len(nodepair_list) - 1)
+            ]
+            (
+                updating_graph[nodepair_x][nodepair_y],
+                updating_graph[nodepair_y][[nodepair_x]],
+            ) = (1, 1)
+            self.edge_structure.append(
+                (nodepair_x, nodepair_y, generated_edge_lifespan)
+            )  # For saturation model, timesteps to edge removal should be ostensibly inf
+
+        self._remove_stale_edges()
         return updating_graph
 
 
@@ -69,7 +106,9 @@ class ProceduralGraphGenerator(object):
 
         return initial_graph
 
-    def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
+    def _make_infection_array(self, 
+        largest_subcomponent: np.ndarray
+        ) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
         with num_agents number of initial infections with the agents in the largest
@@ -110,7 +149,9 @@ class ProceduralGraphGenerator(object):
         return updating_graph
 
     def infect_till_saturation(
-        self, infection_probability: float = 0.05, max_iters=2000
+        self, 
+        infection_probability: float = 0.05,
+        max_iters=2000
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -186,8 +227,15 @@ if __name__ == "__main__":
         graph = graphgen.initial_adj_matrix
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
 
+        mutator = GraphStructureMutator(graph)
         x = ProceduralGraphGenerator(graph)
-        q, r, t = x.infect_till_saturation()
+
+        mutator._next_structure_saturation(graph, graph_rand)
+
+        test = [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
+
+        print(list(map(lambda x: (x[0], x[1], x[2] - 1), test)))
+        # q,r, t = x.infect_till_saturation()
 
         """fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
