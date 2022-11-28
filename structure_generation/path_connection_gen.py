@@ -128,7 +128,9 @@ class ProceduralGraphGenerator(object):
             reachability_arrays.append(reachability_array)
     
         final_matrix = np.vstack(reachability_arrays)
-        np.fill_diagonal(final_matrix, np.inf)
+        final_matrix[final_matrix == 0] = np.inf
+
+        np.fill_diagonal(final_matrix, 0)
         return final_matrix
 
     def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
@@ -229,11 +231,12 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        #for t in(x._find_reachability_matrix(graph)):
-        #    print(t)
-        x, r, t = x.infect_till_saturation(
-            modality="saturation",
-        )
+        for t in(x._find_reachability_matrix(graph)):
+            print(t)
+        #x, r, t = x.infect_till_saturation(
+         
+         #   modality="saturation",
+        #)
         #fig, ax = plt.subplots()
         #ax.plot([x for x in range(len(t))], t)
         #plt.show()
