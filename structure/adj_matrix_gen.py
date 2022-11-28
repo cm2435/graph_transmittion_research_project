@@ -36,6 +36,7 @@ class DebugStatic(GraphGenerator):
     def generate_adj_matrix(self):
         debug_graph = np.zeros((self.num_nodes, self.num_nodes))
         debug_graph[1, 2] = 1
+        debug_graph[2, 1] = 1
         return debug_graph
 
 
