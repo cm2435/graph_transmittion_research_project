@@ -166,7 +166,8 @@ class ProceduralGraphGenerator(object):
         4. Iterate 1,2,3 untill infection matrix is saturated, then log the number of timesteps needed
 
         """
-        fraction_infected, infection_matrix_list, timesteps_to_full_saturation = (
+        fraction_infected, infection_matrix_list, average_reachability, timesteps_to_full_saturation = (
+            [],
             [],
             [],
             0,
@@ -208,7 +209,7 @@ class ProceduralGraphGenerator(object):
                 sum(value == 1 for value in current_infection_dict.values())
                 / len(current_infection_dict)
             )
-
+            print(infection_matrix_list[-1])
             # print(graph_structure)
             if timesteps_to_full_saturation == max_iters:
                 break
@@ -228,11 +229,11 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        for t in(x._find_reachability_matrix(graph)):
-            print(t)
-        #, r, t = x.infect_till_saturation(
-        #    modality="saturation",
-        #)
+        #for t in(x._find_reachability_matrix(graph)):
+        #    print(t)
+        x, r, t = x.infect_till_saturation(
+            modality="saturation",
+        )
         #fig, ax = plt.subplots()
         #ax.plot([x for x in range(len(t))], t)
         #plt.show()
