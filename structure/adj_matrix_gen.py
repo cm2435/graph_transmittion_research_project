@@ -32,6 +32,9 @@ class GraphGenerator(abc.ABC):
 
 class DebugStatic(GraphGenerator):
     name = "debug_static"
+    def __init__(self, structure_name: str = "debug_static", num_nodes: int = 50):
+        super().__init__(structure_name=structure_name, num_nodes=num_nodes)
+        self.initial_adj_matrix = self.generate_adj_matrix()
 
     def generate_adj_matrix(self):
         debug_graph = np.zeros((self.num_nodes, self.num_nodes))
