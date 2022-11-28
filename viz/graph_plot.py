@@ -27,11 +27,22 @@ def plot_saturation(
         ax2.plot(timesteps, grad, label="d/dt saturation")
         ax2.set(ylabel="Gradient")
         ax2.legend()
+<<<<<<< HEAD
         try:
             p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
             axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
         except RuntimeError as e:
             print(f"{e}")
+=======
+
+        try: 
+            p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+            axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        except RuntimeError as e:
+            print(e)
+            pass 
+        
+>>>>>>> origin/charlieswork
         axis.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
                         saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
         axis.set(xlabel=f'Number of timesteps')

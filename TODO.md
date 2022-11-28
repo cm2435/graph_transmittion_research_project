@@ -8,3 +8,18 @@
 4. Fit equasions / research theory for the erdos-something graph structure. 
 
 5. Barabasi graph look at  
+
+
+
+
+24.11.2022
+
+1. Look at the 'causal' case of edges turning on and off for the edge by edge saturation behaviour of networks
+2. Look at the 'reachability' matrix of all nodes in the graph as a function of the timesteps for this 
+
+Extentions: 
+1. Look at:
+    variable length timesteps
+    nodes being able to turn off 
+    various edge weights 
+    different distributions of static graph structures 
