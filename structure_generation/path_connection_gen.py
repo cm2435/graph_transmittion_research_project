@@ -20,9 +20,7 @@ class GraphStructureMutator(object):
         self.initial_structure: str = initial_structure
         self.edge_structure: List[Tuple[int, int, int]] = []
 
-    def _remove_stale_edges(
-        self, updating_adj_matrix: np.ndarray, update_timestep: bool = True
-    ):
+    def _remove_stale_edges(self, update_timestep: bool = True):
         """ """
         if update_timestep:
             self.edge_structure = list(
@@ -30,19 +28,14 @@ class GraphStructureMutator(object):
             )
 
         self.edge_structure = [x for x in self.edge_structure if x[2] != 0]
-        for edge_pair in self.edge_structure:
-            #TODO figure out why the alternate doesn't work as intended, sets saturation behaviour to zero
-            updating_adj_matrix[edge_pair[0]][edge_pair[1]] = 0
-            #updating_adj_matrix[edge_pair[1]][edge_pair[0]] = 0
-
-        return updating_adj_matrix
+        pass
 
     def _next_structure(
         self,
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 1,
-        generated_edge_lifespan: int = 1000,
+        generated_edge_lifespan: int = 5,
         modality: str = "saturation",
     ) -> np.ndarray:
         """
@@ -68,7 +61,7 @@ class GraphStructureMutator(object):
             self.edge_structure.append(
                 (nodepair_x, nodepair_y, generated_edge_lifespan)
             )
-        updating_graph = self._remove_stale_edges(updating_adj_matrix= updating_graph)
+        self._remove_stale_edges()
         return updating_graph
 
 
@@ -87,7 +80,8 @@ class ProceduralGraphGenerator(object):
 
     @staticmethod
     def _find_giant_structure(
-        graph_structure: np.ndarray, verbose: bool = True
+        graph_structure: np.ndarray, 
+        verbose: bool = True
     ) -> np.ndarray:
         """
         Helper method to find the giant graph of a adj matrix represented graph structure
@@ -100,8 +94,11 @@ class ProceduralGraphGenerator(object):
 
         return giant_graph
 
-    def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
-        """ """
+    def _make_initial_structure(self, 
+        giant_graph: np.ndarray
+        ) -> np.ndarray: 
+        '''
+        '''
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
         random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
@@ -112,7 +109,9 @@ class ProceduralGraphGenerator(object):
 
         return initial_graph
 
-    def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
+    def _make_infection_array(self, 
+        largest_subcomponent: np.ndarray
+    ) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
         with num_agents number of initial infections with the agents in the largest
@@ -130,10 +129,10 @@ class ProceduralGraphGenerator(object):
         return infection_arr, fully_saturated_arr
 
     def infect_till_saturation(
-        self,
-        infection_probability: float = 1,
-        max_iters: int = 50000,
-        modality: str = "saturation",
+        self, 
+        infection_probability: float = 1, 
+        max_iters: int = 2000,
+        modality : str = "saturation"
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -163,9 +162,9 @@ class ProceduralGraphGenerator(object):
             current_infection_dict = infection_dict_list[-1]
 
             graph_structure = self.structure_mutator._next_structure(
-                sampling_graph=giant_graph,
-                updating_graph=initial_graph,
-                modality=modality,
+                sampling_graph= giant_graph,
+                updating_graph= initial_graph, 
+                modality= modality
             )
 
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
@@ -209,7 +208,7 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        q, r, t = x.infect_till_saturation(modality="causal",)
+        q, r, t = x.infect_till_saturation(modality= "causal")
         fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
         plt.show()
