@@ -228,7 +228,8 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-
+        for t in(x._find_reachability_matrix(graph)):
+            print(t)
         #, r, t = x.infect_till_saturation(
         #    modality="saturation",
         #)
