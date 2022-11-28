@@ -128,7 +128,7 @@ class ProceduralGraphGenerator(object):
             reachability_arrays.append(reachability_array)
     
         final_matrix = np.vstack(reachability_arrays)
-        np.fill_diagonal(final_matrix, 1)
+        np.fill_diagonal(final_matrix, np.inf)
         return final_matrix
 
     def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
