@@ -114,6 +114,23 @@ class ProceduralGraphGenerator(object):
 
         return initial_graph
 
+    def _find_reachability_matrix(self,
+        input_graph : np.ndarray, 
+    ) -> np.ndarray: 
+        graph = nx.from_numpy_array(input_graph)
+        assert input_graph.shape[0] == input_graph.shape[1]
+        
+        reachability_arrays = []
+        for _ in range(input_graph.shape[0]):
+            reachability_array = np.zeros(input_graph.shape[0])   
+            for reachable_path_idx, path_length in nx.single_target_shortest_path_length(graph, _, cutoff=None):
+                reachability_array[reachable_path_idx] = path_length
+            reachability_arrays.append(reachability_array)
+    
+        final_matrix = np.vstack(reachability_arrays)
+        np.fill_diagonal(final_matrix, 1)
+        return final_matrix
+
     def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
@@ -211,12 +228,13 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        q, r, t = x.infect_till_saturation(
-            modality="saturation",
-        )
-        fig, ax = plt.subplots()
-        ax.plot([x for x in range(len(t))], t)
-        plt.show()
+
+        #, r, t = x.infect_till_saturation(
+        #    modality="saturation",
+        #)
+        #fig, ax = plt.subplots()
+        #ax.plot([x for x in range(len(t))], t)
+        #plt.show()
         """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
         if os.path.isdir(fp) is False: 
             os.makedirs(fp)
