@@ -31,7 +31,6 @@ class GraphStructureMutator(object):
 
         edges_to_pop = [x for x in self.edge_structure if x[2] == 0]
         for edge_pair in edges_to_pop:
-            # TODO figure out why the alternate doesn't work as intended, sets saturation behaviour to zero
             updating_adj_matrix[edge_pair[0]][edge_pair[1]] = 0
             updating_adj_matrix[edge_pair[1]][edge_pair[0]] = 0
 
@@ -43,7 +42,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 1,
+        generated_edge_lifespan: int = 5,
         modality: str = "saturation",
     ) -> np.ndarray:
         """
@@ -122,9 +121,12 @@ class ProceduralGraphGenerator(object):
         # For obvious reasons.
         graph = nx.from_numpy_array(input_graph)
         shortestLengths = nx.all_pairs_shortest_path_length(graph)
-        final_matrix = np.full(shape=input_graph.shape, fill_value=np.inf)
+
+        final_matrix = np.full(shape=input_graph.shape, fill_value=1000000)
         for idx, map in shortestLengths:
-            for key, value in map.items(): final_matrix[idx, key] = value
+            for key, value in map.items(): 
+                final_matrix[idx, key] = value
+            
         return final_matrix
 
     def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
@@ -183,7 +185,7 @@ class ProceduralGraphGenerator(object):
                 updating_graph=initial_graph,
                 modality=modality,
             )
-
+            average_reachability.append(self._find_reachability_matrix(graph_structure))
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
@@ -205,11 +207,9 @@ class ProceduralGraphGenerator(object):
                 sum(value == 1 for value in current_infection_dict.values())
                 / len(current_infection_dict)
             )
-            print(infection_matrix_list[-1])
-            # print(graph_structure)
             if timesteps_to_full_saturation == max_iters:
                 break
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
+        return infection_matrix_list, timesteps_to_full_saturation,average_reachability, fraction_infected
 
 
 if __name__ == "__main__":
@@ -225,14 +225,14 @@ if __name__ == "__main__":
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        for t in(x._find_reachability_matrix(graph)):
-            print(t)
-        #x, r, t = x.infect_till_saturation(
-         
-         #   modality="saturation",
-        #)
-        #fig, ax = plt.subplots()
-        #ax.plot([x for x in range(len(t))], t)
+        #for t in(x._find_reachability_matrix(graph)):
+        #        print(t)
+        x, r, q, t = x.infect_till_saturation(modality="saturation",
+        )
+        print("saving")
+        np.savetxt("foo.txt", q[-1])
+        fig, ax = plt.subplots()
+        ax.plot([x for x in range(len(t))], t)
         #plt.show()
         """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
         if os.path.isdir(fp) is False: 
