@@ -118,20 +118,13 @@ class ProceduralGraphGenerator(object):
     def _find_reachability_matrix(self,
         input_graph : np.ndarray, 
     ) -> np.ndarray: 
+        # NetworkX errors on a matrix that isn't square
+        # For obvious reasons.
         graph = nx.from_numpy_array(input_graph)
-        assert input_graph.shape[0] == input_graph.shape[1]
-        
-        reachability_arrays = []
-        for _ in range(input_graph.shape[0]):
-            reachability_array = np.zeros(input_graph.shape[0])   
-            for reachable_path_idx, path_length in nx.single_target_shortest_path_length(graph, _, cutoff=None):
-                reachability_array[reachable_path_idx] = path_length
-            reachability_arrays.append(reachability_array)
-    
-        final_matrix = np.vstack(reachability_arrays)
-        final_matrix[final_matrix == 0] = np.inf
-
-        np.fill_diagonal(final_matrix, 0)
+        shortestLengths = nx.all_pairs_shortest_path_length(graph)
+        final_matrix = np.full(shape=input_graph.shape, fill_value=inf)
+        for idx, map in shortestLengths:
+            for key, value in map.items(): final_matrix[idx, key] = value
         return final_matrix
 
     def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
