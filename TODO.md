@@ -23,3 +23,10 @@ Extentions:
     nodes being able to turn off 
     various edge weights 
     different distributions of static graph structures 
+
+
+
+# TODO FOR THIS WEEK 
+# Take the reachability and impliment it to find the average of the matrix for each timestep and plot
+# Charlie is dumb and wrote the core logic as dicts when the reachility matrix function takes in np arrays, core logic needs refactor to be done in numpy 
+
