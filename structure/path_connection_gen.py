@@ -146,11 +146,14 @@ class ProceduralGraphGenerator(object):
 
         return infection_arr, fully_saturated_arr
 
+
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
         max_iters: int = 5000,
         modality: str = "saturation",
+        new_edges_per_timestep : int = 2, 
+        generated_edge_lifespan : int = 5,
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -188,8 +191,9 @@ class ProceduralGraphGenerator(object):
                     sampling_graph=giant_graph,
                     updating_graph=initial_graph,
                     modality=modality,
+                    num_new_edges_per_timestep = new_edges_per_timestep,
+                    generated_edge_lifespan= generated_edge_lifespan
                 )
-                average_reachability.append(self._find_reachability_matrix(graph_structure))
                 nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
                 for pair in nodepair_list:
                     if (
@@ -206,6 +210,7 @@ class ProceduralGraphGenerator(object):
                                 current_infection_dict[pair[1]],
                             ) = (1, 1)
 
+                average_reachability.append(self._find_reachability_matrix(graph_structure))
                 infection_matrix_list.append(current_infection_dict)
                 fraction_infected.append(
                     sum(value == 1 for value in current_infection_dict.values())
@@ -217,29 +222,32 @@ class ProceduralGraphGenerator(object):
 
 
 if __name__ == "__main__":
-    global num_edges_per_timestep
-    num_edges_per_timestep = 1
+    num_edges_per_timestep = 5
 
-    # for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
-    for structure_name in ["configuration"]:
-        import matplotlib.pyplot as plt
+    for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
+        for modality in ["causal", "saturation"]: 
+            print(f"structure: {structure_name}, modality: {modality}")
+            import matplotlib.pyplot as plt
 
-        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=200)
-        graph = graphgen.initial_adj_matrix
-        graph_rand = graphgen.get_graph_structure().initial_adj_matrix
-        x = ProceduralGraphGenerator(graph)
+            graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=200)
+            graph = graphgen.initial_adj_matrix
+            graph_rand = graphgen.get_graph_structure().initial_adj_matrix
+            x = ProceduralGraphGenerator(graph)
 
-        #for t in(x._find_reachability_matrix(graph)):
-        #        print(t)
-        x, r, q, t = x.infect_till_saturation(modality="saturation",
-        )
-        fig, ax = plt.subplots()
-        ax.plot([x for x in range(len(t))], t)
-        plt.show()
-        """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
-        if os.path.isdir(fp) is False: 
-            os.makedirs(fp)
-        fig.savefig(f"{fp}/{structure_name}.png")
+            #for t in(x._find_reachability_matrix(graph)):
+            #        print(t)
+            x, r, q, t = x.infect_till_saturation(
+                modality=modality,
+                new_edges_per_timestep = num_edges_per_timestep
+ 
+            )
+            fig, ax = plt.subplots()
+            ax.plot([x for x in range(len(t))], t)
+            #plt.show()
+            fp = f"/home/cm2435/Desktop/university_final_year_cw/data/{modality}{num_edges_per_timestep}"
+            if os.path.isdir(fp) is False: 
+                os.makedirs(fp)
+            fig.savefig(f"{fp}/{structure_name}.png")
 
-        del plt
-        gc.collect()"""
+            del plt
+            gc.collect()
