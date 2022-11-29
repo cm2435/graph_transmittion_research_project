@@ -7,12 +7,12 @@ import tqdm
 import scipy
 import argparse
 from graph_structure.erdos_graph import ErdosGraphSimulator
-from scaling_hypotheses.hypotheses import Logistic
 from structure.adj_matrix_gen import *
-from collections import namedtuple
 from typing import Optional, Tuple, List 
 from viz.graph_plot import plot_saturation, plot_hist
 import gc
+import configparser
+from scipy import stats
 
 def simulate_saturation(params) -> Tuple[List[float], List[float]]:
     # I hate this
@@ -58,20 +58,7 @@ def genAndViz(args, conf) -> None:
 
 
 if __name__ == "__main__":
-    """
-    At some point:
-    Have a config file which defines defaults for this, that, and the other
-    but allow those defaults to be overridden with a CLI argument.
-    """
-    # Config parser uses .ini
-    import configparser
-    from scipy import stats
-
-    configuration = configparser.ConfigParser()
-
-    parser = argparse.ArgumentParser(
-        prog="GraphTransmission",
-        description="Simulates information propagation on networks",
+    """on networks",
         epilog="Written by Charlie Masters and Max Haughton",
     )
     parser.add_argument("--csv-dir", dest="csv_dir", help="Where to write a .csv file")
@@ -142,6 +129,87 @@ if __name__ == "__main__":
             graph_type= structure_name,
             save_filename= True
             )
+    At some point:
+    Have a config file which defines defaults for this, that, and the other
+    but allow those defaults to be overridden with a CLI argument.
+    """
+    # Config parser uses .ini
+    configuration = configparser.ConfigParser()
+
+    parser = argparse.ArgumentParser(
+        prog="GraphTransmission",
+        description="Simulates information propagation on networks",
+        epilog="Written by Charlie Masters and Max Haughton",
+    )
+    parser.add_argument("--csv-dir", dest="csv_dir", help="Where to write a .csv file")
+    parser.add_argument(
+        "--config",
+        dest="config_file",
+        help="Path to a configuration file, default is config.ini",
+        default="config.ini",
+    )
+    subParsers = parser.add_subparsers(
+        title="Some sub-utilities are available", dest="cmd"
+    )
+    graphDebug = subParsers.add_parser(
+        "gen-graph", help="Generate an example graph using each available method"
+    )
+    graphDebug.set_defaults(func=genAndViz)
+    graphDebug.add_argument("--graph", dest="graph_name",
+                            help="Sample & draw a graph only with this name")
+    parsedArgs = parser.parse_args()
+    configuration.read(parsedArgs.config_file)
+
+    conf = configuration["RUN"]
+    num_initial_agents = int(conf["initial_agents"])
+    num_nodes = int(conf["nodes"])
+    structure_name = conf["structure"]
+    simulation_iters = int(conf['simulation_iterations'])
+    transmittion_prob = float(conf['transmittion_prob'])
+    max_iters = int(conf['max_iterations'])
+    visualise = bool(conf['visualise'])
+    if parsedArgs.cmd is not None:
+        parsedArgs.func(parsedArgs, configuration)
+        exit()
+    
+    simulation_output = []
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
+        iterThis = itertools.repeat(
+            (num_nodes, num_initial_agents, structure_name, transmittion_prob, max_iters), simulation_iters
+        )
+        with tqdm.tqdm(total=simulation_iters) as pbar:
+            for _ in p.imap_unordered(simulate_saturation, iterThis):
+                pbar.update()
+                simulation_output.append(_)
+
+    convergence_steps = [x[0] for x in simulation_output]
+    saturation_fractions = [x[1] for x in simulation_output]
+    
+    # Pad the list to ones to the longest saturation length, find the mean across all simulations and the std at each timestep
+    padded_list = np.array(
+        list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
+    )
+    saturation_timestep = np.mean(padded_list, axis=0)
+    saturation_timestep_std = [
+        np.std(padded_list[:, i]) for i in range(len(padded_list[0]))
+    ]
+
+    stats_dict = {
+        "mean": np.average(convergence_steps),
+        "variance": np.var(convergence_steps),
+        "skew": scipy.stats.skew(convergence_steps),
+        "kurtosis": scipy.stats.kurtosis(convergence_steps),
+        "num_nodes": num_nodes,
+    }
+    
+    if visualise: 
+        #plot_hist(convergence_steps= convergence_steps, saturation_fractions= saturation_fractions)
+        plot_saturation(
+                saturation_fraction_mean= saturation_timestep,
+                saturation_fraction_std= saturation_timestep_std,
+                graph_type= structure_name,
+                save_filename= True
+                )
 
     import pandas as pd
 

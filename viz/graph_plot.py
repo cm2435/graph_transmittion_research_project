@@ -3,7 +3,7 @@ import numpy as np
 import random
 from pathlib import Path
 
-def plot_hist(convergence_steps : np.ndarray, saturation_fractions : np.ndrarray):
+def plot_hist(convergence_steps, saturation_fractions):
     hist = True
     if hist:
         from scaling_hypotheses.hypotheses import Logistic
