@@ -122,7 +122,7 @@ class ProceduralGraphGenerator(object):
         graph = nx.from_numpy_array(input_graph)
         shortestLengths = nx.all_pairs_shortest_path_length(graph)
 
-        final_matrix = np.full(shape=input_graph.shape, fill_value=1000000)
+        final_matrix = np.full(shape=input_graph.shape, fill_value=np.inf)
         for idx, map in shortestLengths:
             for key, value in map.items(): 
                 final_matrix[idx, key] = value
@@ -176,39 +176,43 @@ class ProceduralGraphGenerator(object):
         initial_graph = self._make_initial_structure(giant_graph)
 
         infection_dict_list = [infection_dict]
-        while infection_dict_list[-1] != fully_saturated_dict:
-            timesteps_to_full_saturation += 1
-            current_infection_dict = infection_dict_list[-1]
 
-            graph_structure = self.structure_mutator._next_structure(
-                sampling_graph=giant_graph,
-                updating_graph=initial_graph,
-                modality=modality,
-            )
-            average_reachability.append(self._find_reachability_matrix(graph_structure))
-            nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
-            for pair in nodepair_list:
-                if (
-                    current_infection_dict[pair[0]]
-                    or current_infection_dict[pair[1]] == 1
-                ):
-                    # Do not always guarrentee infection
-                    infection_outcome = np.random.choice(
-                        [0, 1], p=[1 - infection_probability, infection_probability]
-                    )
-                    if infection_outcome == 1:
-                        (
-                            current_infection_dict[pair[0]],
-                            current_infection_dict[pair[1]],
-                        ) = (1, 1)
+        with tqdm.tqdm(total=max_iters) as pbar:
 
-            infection_matrix_list.append(current_infection_dict)
-            fraction_infected.append(
-                sum(value == 1 for value in current_infection_dict.values())
-                / len(current_infection_dict)
-            )
-            if timesteps_to_full_saturation == max_iters:
-                break
+            while infection_dict_list[-1] != fully_saturated_dict:
+                timesteps_to_full_saturation += 1
+                pbar.update(1)
+                current_infection_dict = infection_dict_list[-1]
+
+                graph_structure = self.structure_mutator._next_structure(
+                    sampling_graph=giant_graph,
+                    updating_graph=initial_graph,
+                    modality=modality,
+                )
+                average_reachability.append(self._find_reachability_matrix(graph_structure))
+                nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
+                for pair in nodepair_list:
+                    if (
+                        current_infection_dict[pair[0]]
+                        or current_infection_dict[pair[1]] == 1
+                    ):
+                        # Do not always guarrentee infection
+                        infection_outcome = np.random.choice(
+                            [0, 1], p=[1 - infection_probability, infection_probability]
+                        )
+                        if infection_outcome == 1:
+                            (
+                                current_infection_dict[pair[0]],
+                                current_infection_dict[pair[1]],
+                            ) = (1, 1)
+
+                infection_matrix_list.append(current_infection_dict)
+                fraction_infected.append(
+                    sum(value == 1 for value in current_infection_dict.values())
+                    / len(current_infection_dict)
+                )
+                if timesteps_to_full_saturation == max_iters:
+                    break
         return infection_matrix_list, timesteps_to_full_saturation,average_reachability, fraction_infected
 
 
