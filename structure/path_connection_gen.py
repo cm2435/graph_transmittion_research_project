@@ -233,11 +233,9 @@ if __name__ == "__main__":
         #        print(t)
         x, r, q, t = x.infect_till_saturation(modality="saturation",
         )
-        print("saving")
-        np.savetxt("foo.txt", q[-1])
         fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
-        #plt.show()
+        plt.show()
         """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
         if os.path.isdir(fp) is False: 
             os.makedirs(fp)

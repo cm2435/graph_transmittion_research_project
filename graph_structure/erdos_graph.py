@@ -72,6 +72,7 @@ class ErdosGraphSimulator(object):
         infection_matrix_list = [self.infection_matrix]
         timesteps_to_full_saturation = 0
         fraction_infected = []
+        
         while (
             np.array_equal(infection_matrix_list[-1], np.ones(self.num_nodes)) is False
         ):
