@@ -95,7 +95,8 @@ class ProceduralGraphGenerator(object):
         Helper method to find the giant graph of a adj matrix represented graph structure
         """
         graph = nx.from_numpy_array(graph_structure)
-        nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
+        max_comp = max(nx.connected_components(graph), key=len)
+        nx_giant_graph = graph.subgraph(max_comp)
         if verbose:
             print(f"graph structure with properties{nx_giant_graph}")
         giant_graph = nx.to_numpy_array(nx_giant_graph)
