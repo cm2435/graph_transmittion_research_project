@@ -244,13 +244,13 @@ if __name__ == "__main__":
         "random_geometric",
         #"sparse_erdos",
     ]:
-        for modality in ["causal"]:
+        for modality in ["saturation"]:
             config_dict = {
                 "num_nodes" : 200,
-                "num_edges_per_timestep" : 5, 
+                "num_edges_per_timestep" : 1, 
                 "modality" : modality,
                 "structure_name" : structure_name,
-                "generated_edge_lifespan" : 5
+                "generated_edge_lifespan" : 50
             }
 
             print(f"structure: {structure_name}, modality: {modality}")
