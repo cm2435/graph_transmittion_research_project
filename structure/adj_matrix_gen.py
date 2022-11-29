@@ -96,11 +96,12 @@ class RandomSparse(GraphGenerator):
         super().__init__(structure_name=structure_name, num_nodes=num_nodes)
         self.initial_adj_matrix = self.generate_adj_matrix()
 
-    def generate_adj_matrix(self, num_edges: int = 5) -> np.ndarray:
+    def generate_adj_matrix(self, num_edges: int = 10) -> np.ndarray:
         """
         Generate a random num_node by num_node adjacency matrix that is seeded with
         num_timestep_edges connections in an otherwise sparse graph.
         """
+        num_edges = int(self.num_nodes ** 2 * 0.01)
         uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
         for _ in range(num_edges):
             random_i, random_j = random.randint(0, self.num_nodes - 1), random.randint(
