@@ -39,11 +39,16 @@ def genAndViz(args, conf) -> None:
         gen = RecClass(structure, int(conf["RUN"]["nodes"]))
         assert(gen.structure_name == structure)
         mat = gen.generate_adj_matrix()
-        import viz.draw
-        import os
 
+        import viz.draw, os, lzma
+
+        data_in = mat.tobytes()
+        data_out = lzma.compress(data_in, preset=9)
+        compRatio = - np.log2(len(data_out) / len(data_in))
+
+        label_name = f"{structure} ({compRatio})"
         full = os.path.join(conf["VIZ"]["output_dir"], structure + ".png")
-        viz.draw.draw_graph(mat, path=full, label_name=structure)
+        viz.draw.draw_graph(mat, path=full, label_name=label_name)
     if args.graph_name is None:
         with Pool() as pool:
             pool.map(job, GraphGenerator.get_graph_names())
