@@ -107,7 +107,6 @@ class ProceduralGraphGenerator(object):
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
         random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
-        print(edges)
         (
             initial_graph[random_edge_x][random_edge_y],
             initial_graph[random_edge_y][random_edge_x],
@@ -238,19 +237,20 @@ if __name__ == "__main__":
 
 
     for structure_name in [
-        "fully_connected",
-        "random_sparse",
-        "barabasi_albert",
-        "configuration",
+        #"fully_connected",
+        #"random_sparse",
+        #"barabasi_albert",
+        #"configuration",
         "random_geometric",
-        "sparse_erdos",
+        #"sparse_erdos",
     ]:
-        for modality in ["causal", "saturation"]:
+        for modality in ["causal"]:
             config_dict = {
                 "num_nodes" : 200,
                 "num_edges_per_timestep" : 5, 
                 "modality" : modality,
                 "structure_name" : structure_name,
+                "generated_edge_lifespan" : 5
             }
 
             print(f"structure: {structure_name}, modality: {modality}")
@@ -266,15 +266,16 @@ if __name__ == "__main__":
             # for t in(x._find_reachability_matrix(graph)):
             #        print(t)
             infection_matrix_list,timesteps_to_full_saturation,average_reachability,fraction_infected,= x.infect_till_saturation(
-                modality=modality, new_edges_per_timestep= config_dict['num_edges_per_timestep']
+                modality=modality, new_edges_per_timestep= config_dict['num_edges_per_timestep'], generated_edge_lifespan= 50
             )
             fig, ax = plt.subplots()
             ax.plot([x for x in range(timesteps_to_full_saturation)], fraction_infected)
             # plt.show()
-            fp = f"/home/cm2435/Desktop/graph_transmittion_research_project/data/{modality}/choose_{config_dict['num_edges_per_timestep']}/{structure_name}"
+            fp = f"/home/cm2435/Desktop/graph_transmittion_research_project/data/{modality}/lifespan{config_dict['generated_edge_lifespan']}/choose_{config_dict['num_edges_per_timestep']}/{structure_name}"
             if os.path.isdir(fp) is False:
                 os.makedirs(fp)
 
+            print(fp)
             config_dict['timesteps_to_full_saturation'] = timesteps_to_full_saturation
             config_dict['reachability_matrix'] = average_reachability[-1].tolist()
 
