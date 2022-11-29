@@ -56,7 +56,7 @@ def draw_graph(mat: np.array, path: str, label_name=""):
     # To draw a directed graph properly in DOT a different symbol is needed
     conString = "--" if assumeUndirected else "->"
     for idx in range(mat.shape[0]):
-        graphString += f"{idx} [label=\"{components[idx]}\"]\n"
+        graphString += f"{idx} [label=\"{components[idx]},{idx}\"]\n"
     for x in it:
         idx = it.multi_index
         if x == 1:
