@@ -3,6 +3,38 @@ import numpy as np
 import random
 from pathlib import Path
 
+def plot_hist(convergence_steps : np.ndarray, saturation_fractions : np.ndrarray):
+    hist = True
+    if hist:
+        from scaling_hypotheses.hypotheses import Logistic
+        from scipy.optimize import curve_fit
+        import inspect
+        logi = Logistic()
+        ff = logi.fit_func()
+        argStrings = (inspect.getfullargspec(ff).args)
+        argStrings.pop(0)
+        numArgs = len(argStrings)# The first argument is the x-data
+        found = 0
+        foundParams = np.array([])
+        for i in range(0, len(convergence_steps)):
+            times = np.array([x for x in range(0, convergence_steps[i])])
+            sats = saturation_fractions[i]
+            assert(len(times) == len(sats))
+            try:
+                p, pcov = curve_fit(ff, times, sats)
+                found += 1
+                foundParams = np.concatenate((foundParams, p), axis=0)
+            except RuntimeError as e:
+                pass
+        split = np.split(foundParams, numArgs)
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(numArgs)
+        bins = 100
+        for i in range(numArgs):
+            ax.flat[i].hist(np.log10(split[i]), bins = bins)
+            ax.flat[i].set(xlabel=argStrings[i])
+        plt.show()
+
 
 def plot_saturation(
     saturation_fraction_mean: np.ndarray,

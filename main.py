@@ -11,7 +11,7 @@ from scaling_hypotheses.hypotheses import Logistic
 from structure.adj_matrix_gen import *
 from collections import namedtuple
 from typing import Optional, Tuple, List 
-from viz.graph_plot import plot_saturation
+from viz.graph_plot import plot_saturation, plot_hist
 import gc
 
 def simulate_saturation(params) -> Tuple[List[float], List[float]]:
@@ -117,36 +117,7 @@ if __name__ == "__main__":
 
     convergence_steps = [x[0] for x in simulation_output]
     saturation_fractions = [x[1] for x in simulation_output]
-    hist = True
-    if hist:
-        from scaling_hypotheses.hypotheses import Logistic
-        from scipy.optimize import curve_fit
-        import inspect
-        logi = Logistic()
-        ff = logi.fit_func()
-        argStrings = (inspect.getfullargspec(ff).args)
-        argStrings.pop(0)
-        numArgs = len(argStrings)# The first argument is the x-data
-        found = 0
-        foundParams = np.array([])
-        for i in range(0, len(convergence_steps)):
-            times = np.array([x for x in range(0, convergence_steps[i])])
-            sats = saturation_fractions[i]
-            assert(len(times) == len(sats))
-            try:
-                p, pcov = curve_fit(ff, times, sats)
-                found += 1
-                foundParams = np.concatenate((foundParams, p), axis=0)
-            except RuntimeError as e:
-                pass
-        split = np.split(foundParams, numArgs)
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(numArgs)
-        bins = 100
-        for i in range(numArgs):
-            ax.flat[i].hist(np.log10(split[i]), bins = bins)
-            ax.flat[i].set(xlabel=argStrings[i])
-        plt.show()
+    
     # Pad the list to ones to the longest saturation length, find the mean across all simulations and the std at each timestep
     padded_list = np.array(
         list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
@@ -163,7 +134,8 @@ if __name__ == "__main__":
         "kurtosis": scipy.stats.kurtosis(convergence_steps),
         "num_nodes": num_nodes,
     }
-
+        
+    plot_hist(convergence_steps= convergence_steps, saturation_fractions= saturation_fractions)
     plot_saturation(
             saturation_fraction_mean= saturation_timestep,
             saturation_fraction_std= saturation_timestep_std,
