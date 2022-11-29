@@ -220,4 +220,4 @@ if __name__ == "__main__":
         df.to_csv(
             os.path.join(parsedArgs.csv_dir, f"{num_initial_agents}.csv")
             # f"/home/cm2435/Desktop/university_final_year_cw/data/stats/{num_initial_agents}.csv"
-        )/home/cm2435/Desktop/graph_transmittion_research_project/data/figures
+        )
