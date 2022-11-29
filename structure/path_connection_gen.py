@@ -122,7 +122,7 @@ class ProceduralGraphGenerator(object):
         # For obvious reasons.
         graph = nx.from_numpy_array(input_graph)
         shortestLengths = nx.all_pairs_shortest_path_length(graph)
-        final_matrix = np.full(shape=input_graph.shape, fill_value=inf)
+        final_matrix = np.full(shape=input_graph.shape, fill_value=np.inf)
         for idx, map in shortestLengths:
             for key, value in map.items(): final_matrix[idx, key] = value
         return final_matrix
