@@ -154,7 +154,7 @@ class ProceduralGraphGenerator(object):
         modality: str = "saturation",
         new_edges_per_timestep: int = 2,
         generated_edge_lifespan: int = 5,
-    ) -> Tuple[List[np.ndarray], int, List[float]]:
+    ) -> Tuple[List[np.ndarray], int, List[np.ndarray], List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
         in a graph structure.
@@ -268,7 +268,7 @@ if __name__ == "__main__":
             infection_matrix_list,timesteps_to_full_saturation,average_reachability,fraction_infected,= x.infect_till_saturation(
                 modality=modality, new_edges_per_timestep= config_dict['num_edges_per_timestep'], generated_edge_lifespan= 50
             )
-            fig, ax = plt.subplots()
+            """fig, ax = plt.subplots()
             ax.plot([x for x in range(timesteps_to_full_saturation)], fraction_infected)
             # plt.show()
             fp = f"/home/cm2435/Desktop/graph_transmittion_research_project/data/{modality}/lifespan{config_dict['generated_edge_lifespan']}/choose_{config_dict['num_edges_per_timestep']}/{structure_name}"
@@ -283,4 +283,4 @@ if __name__ == "__main__":
                 f.write(json.dumps(config_dict))
 
             fig.savefig(f"{fp}/figure.png")
-            del plt
+            del plt"""
