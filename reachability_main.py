@@ -56,15 +56,19 @@ def genAndViz(args, conf) -> None:
         job(args.graph_name)
     return None 
 
-def find_point_of_linear_gradient_change(saturation_arr): 
-    gradient = []
+def find_point_of_linear_gradient_change(saturation_arr, cut_off): 
+    timesteps = 0
     for i in range(len(saturation_arr)): 
+        timesteps += 1 
         if i == 0: 
             d_grad = 1
         else: 
             d_grad = saturation_arr[i] / saturation_arr[i-1]
-        gradient.append(d_grad)
-    print(gradient)
+        
+        if d_grad > cut_off:
+            break 
+
+    return timesteps
 
 
 if __name__ == "__main__":
@@ -125,9 +129,11 @@ if __name__ == "__main__":
     convergence_steps = [x[0] for x in simulation_output]
     saturation_fractions = [x[-1] for x in simulation_output]
 
-    
-    print(find_point_of_linear_gradient_change(saturation_fractions[0]), "\n\n")
-    print(saturation_fractions)
+    grad_change_idx = [find_point_of_linear_gradient_change(x, 3) for x in saturation_fractions]
+    print(grad_change_idx)
+    import seaborn as sns 
+    with(open("x.txt"), "w") as f: 
+        f.write(grad_change_idx)
     # Pad the list to ones to the longest saturation length, find the mean across all simulations and the std at each timestep
     padded_list = np.array(
         list(zip(*itertools.zip_longest(*saturation_fractions, fillvalue=1)))
@@ -144,7 +150,6 @@ if __name__ == "__main__":
         "kurtosis": scipy.stats.kurtosis(convergence_steps),
         "num_nodes": num_nodes,
     }
-    
     if visualise: 
         #plot_hist(convergence_steps= convergence_steps, saturation_fractions= saturation_fractions)
         plot_saturation(

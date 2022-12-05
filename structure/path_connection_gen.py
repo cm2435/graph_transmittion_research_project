@@ -188,7 +188,6 @@ class ProceduralGraphGenerator(object):
         initial_graph = self._make_initial_structure(giant_graph)
 
         infection_arr_list = [infection_arr]
-        print(infection_arr)
         #with tqdm.tqdm(total=max_iters) as pbar:
         while (
             np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False
