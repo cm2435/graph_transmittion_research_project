@@ -135,14 +135,19 @@ class ProceduralGraphGenerator(object):
         with num_agents number of initial infections with the agents in the largest
         """
         infected_nodes = []
-        nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
-        infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
-        fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
+        #nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
+        #infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
+        #print(largest_subcomponent.shape)
+        #fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
 
+        infection_arr = np.zeros(largest_subcomponent.shape[0])
+        fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
         while len(infected_nodes) < self.num_agents:
-            infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
-            infected_nodes.append(infection_node)
-            infection_arr[infection_node] = 1
+            #infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
+            #infection_arr[infection_node] = 1
+            random_idx = random.randint(0, len(infection_arr) - 1)
+            infection_arr[random_idx] = 1 
+            infected_nodes.append(random_idx)
 
         return infection_arr, fully_saturated_arr
 
@@ -179,17 +184,18 @@ class ProceduralGraphGenerator(object):
         )
 
         giant_graph = self._find_giant_structure(self.initial_structure)
-        infection_dict, fully_saturated_dict = self._make_infection_array(giant_graph)
+        infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
 
-        infection_dict_list = [infection_dict]
-
+        infection_arr_list = [infection_arr]
+        print(infection_arr)
         #with tqdm.tqdm(total=max_iters) as pbar:
-
-        while infection_dict_list[-1] != fully_saturated_dict:
+        while (
+            np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False
+        ):
             timesteps_to_full_saturation += 1
             #pbar.update(1)
-            current_infection_dict = infection_dict_list[-1]
+            current_infection_arr = infection_arr_list[-1]
 
             graph_structure = self.structure_mutator._next_structure(
                 sampling_graph=giant_graph,
@@ -201,8 +207,8 @@ class ProceduralGraphGenerator(object):
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
-                    current_infection_dict[pair[0]]
-                    or current_infection_dict[pair[1]] == 1
+                    current_infection_arr[pair[0]]
+                    or current_infection_arr[pair[1]] == 1
                 ):
                     # Do not always guarrentee infection
                     infection_outcome = np.random.choice(
@@ -210,18 +216,20 @@ class ProceduralGraphGenerator(object):
                     )
                     if infection_outcome == 1:
                         (
-                            current_infection_dict[pair[0]],
-                            current_infection_dict[pair[1]],
+                            current_infection_arr[pair[0]],
+                            current_infection_arr[pair[1]],
                         ) = (1, 1)
 
             average_reachability.append(
                 self._find_reachability_matrix(graph_structure)
             )
-            infection_matrix_list.append(current_infection_dict)
+            
+            infection_matrix_list.append(current_infection_arr)
+            #print(len(np.dstack(np.where(graph_structure == 1)[0])))
             fraction_infected.append(
-                sum(value == 1 for value in current_infection_dict.values())
-                / len(current_infection_dict)
+                np.array(((current_infection_arr==1).sum())/len(current_infection_arr))
             )
+
             if timesteps_to_full_saturation == max_iters:
                 break
         return (

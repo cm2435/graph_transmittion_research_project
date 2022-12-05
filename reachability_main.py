@@ -15,15 +15,15 @@ from structure.adj_matrix_gen import *
 from structure.path_connection_gen import GraphStructureGenerator, ProceduralGraphGenerator
 
 
-def simulate_saturation(params) -> int, Tuple[List[np.ndarray], List[np.ndarray], List[float]]:
+def simulate_saturation(params):
     # I hate this
-    structure_name, modality, edges_per_timestep, edge_lifespan = params
+    structure_name, modality, edges_per_timestep, edge_lifespan, num_nodes = params
 
     graphgen = GraphStructureGenerator(
-        structure_name=structure_name, num_nodes=200
+        structure_name=structure_name, num_nodes=num_nodes
     )
     graph = graphgen.initial_adj_matrix
-    x = ProceduralGraphGenerator(graph)
+    x = ProceduralGraphGenerator(graph, num_nodes = num_nodes)
 
     infection_matrix_list,timesteps_to_full_saturation,average_reachability, fraction_infected = x.infect_till_saturation(
         modality=modality, new_edges_per_timestep= edges_per_timestep, generated_edge_lifespan= edge_lifespan
@@ -55,6 +55,16 @@ def genAndViz(args, conf) -> None:
     else:
         job(args.graph_name)
     return None 
+
+def find_point_of_linear_gradient_change(saturation_arr): 
+    gradient = []
+    for i in range(len(saturation_arr)): 
+        if i == 0: 
+            d_grad = 1
+        else: 
+            d_grad = saturation_arr[i] / saturation_arr[i-1]
+        gradient.append(d_grad)
+    print(gradient)
 
 
 if __name__ == "__main__":
@@ -105,7 +115,7 @@ if __name__ == "__main__":
     simulation_output = []
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         iterThis = itertools.repeat(
-            (structure_name, modality, edges_per_timestep, edge_lifespan), simulation_iters
+            (structure_name, modality, edges_per_timestep, edge_lifespan, num_nodes), simulation_iters
         )
         with tqdm.tqdm(total=simulation_iters) as pbar:
             for _ in p.imap_unordered(simulate_saturation, iterThis):
@@ -113,8 +123,10 @@ if __name__ == "__main__":
                 simulation_output.append(_)
 
     convergence_steps = [x[0] for x in simulation_output]
-    saturation_fractions = [x[1] for x in simulation_output]
+    saturation_fractions = [x[-1] for x in simulation_output]
+
     
+    print(find_point_of_linear_gradient_change(saturation_fractions[0]), "\n\n")
     print(saturation_fractions)
     # Pad the list to ones to the longest saturation length, find the mean across all simulations and the std at each timestep
     padded_list = np.array(
