@@ -75,10 +75,30 @@ class GraphStructureMutator(object):
 
 
 class ProceduralGraphGenerator(object):
-    """ """
+    """
+    Class to generate a graph structure, infect it with agents, and spread the infection till saturation.
+
+    Parameters:
+        initial_structure (np.ndarray): 
+            2D array representing the adjacency matrix of the initial graph structure.
+        num_nodes (int): 
+            Number of nodes in the graph structure. Default is 200.
+        num_agents (int): 
+            Number of agents that are initially infected. Default is 1.
+        
+    Attributes:
+        num_nodes (int): 
+            Number of nodes in the graph structure.
+        num_agents (int): 
+            Number of agents that are initially infected.
+        initial_structure (np.ndarray): 
+            2D array representing the adjacency matrix of the initial graph structure.
+        structure_mutator (GraphStructureMutator): 
+            Instance of GraphStructureMutator with the `initial_structure` as the initial structure.
+    """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 200, num_agents: int = 1
+        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -92,7 +112,15 @@ class ProceduralGraphGenerator(object):
         graph_structure: np.ndarray, verbose: bool = True
     ) -> np.ndarray:
         """
-        Helper method to find the giant graph of a adj matrix represented graph structure
+        Helper method to find the giant graph of a adj matrix represented graph structure.
+        
+        Parameters:
+            graph_structure (np.ndarray): 2D array representing the adjacency matrix of the input graph structure.
+            verbose (bool): Flag to enable/disable printing of information. Default is True.
+            
+        Returns:
+            np.ndarray: 2D array representing the adjacency matrix of the giant graph.
+            
         """
         graph = nx.from_numpy_array(graph_structure)
         nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
@@ -103,7 +131,16 @@ class ProceduralGraphGenerator(object):
         return giant_graph
 
     def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
-        """ """
+        """
+        Method to generate the initial graph structure by adding a random edge to the `giant_graph`.
+        
+        Parameters:
+            giant_graph (np.ndarray): 2D array representing the adjacency matrix of the giant graph.
+            
+        Returns:
+            np.ndarray: 2D array representing the adjacency matrix of the initial graph.
+            
+        """
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
         random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
@@ -117,6 +154,8 @@ class ProceduralGraphGenerator(object):
     def _find_reachability_matrix(self,
         input_graph : np.ndarray, 
     ) -> np.ndarray: 
+        """
+        """
         graph = nx.from_numpy_array(input_graph)
         assert input_graph.shape[0] == input_graph.shape[1]
         
@@ -153,20 +192,26 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 5000,
+        max_iters: int = 20000,
         modality: str = "saturation",
+        verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
-        Procedure to measure time to infection saturation for a given set of initial conditions
-        in a graph structure.
+        Method to spread the infection till saturation in the graph.
 
-        Procedure:
-        1. Randomly sample an adjacency matrix
-        2. If any node edge pairs in the adj matrix are infected, infect their pair with p = infection_probability
-        3. Update the infection matrix with any newly infected nodes by index and update timestep
-
-        4. Iterate 1,2,3 untill infection matrix is saturated, then log the number of timesteps needed
-
+        Parameters:
+            infection_probability (float): Probability of infection spread between nodes.
+            num_iterations (int): Number of iterations to run the infection spread.
+            verbose (bool): Flag to enable/disable printing of information. Default is True.
+            
+        Returns:
+            tuple:
+                infection_iteration_array (list): 
+                    List of dictionaries with keys as the node indices and values as the infection status (0 or 1) at each iteration.
+                fully_saturated_iteration_array (list):
+                    List of dictionaries with keys as the node indices and values as 1, indicating that the node is present in the graph at each iteration.
+                success_iteration (int): 
+                    The iteration number where the infection spread has reached saturation or -1 if the infection did not reach saturation.
         """
         fraction_infected, infection_matrix_list, average_reachability, timesteps_to_full_saturation = (
             [],
@@ -174,7 +219,10 @@ class ProceduralGraphGenerator(object):
             [],
             0,
         )
-
+        if verbose: 
+            pbar = tqdm.tqdm(total=max_iters)
+        #Generate the giant graph as our initial structure from our 'choosing' structure
+        #Generate the infected nodes list and the initial infection graph structure. 
         giant_graph = self._find_giant_structure(self.initial_structure)
         infection_dict, fully_saturated_dict = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
@@ -211,8 +259,8 @@ class ProceduralGraphGenerator(object):
                 sum(value == 1 for value in current_infection_dict.values())
                 / len(current_infection_dict)
             )
-            print(infection_matrix_list[-1])
-            # print(graph_structure)
+            if verbose: 
+                pbar.update(1)
             if timesteps_to_full_saturation == max_iters:
                 break
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
@@ -226,20 +274,17 @@ if __name__ == "__main__":
     for structure_name in ["configuration"]:
         import matplotlib.pyplot as plt
 
-        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=200)
+        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500)
         graph = graphgen.initial_adj_matrix
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        for t in(x._find_reachability_matrix(graph)):
-            print(t)
-        #x, r, t = x.infect_till_saturation(
-         
-         #   modality="saturation",
-        #)
-        #fig, ax = plt.subplots()
-        #ax.plot([x for x in range(len(t))], t)
-        #plt.show()
+        x, r, t = x.infect_till_saturation(
+            modality="causal",
+        )
+        fig, ax = plt.subplots()
+        ax.plot([x for x in range(len(t))], t)
+        plt.show()
         """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
         if os.path.isdir(fp) is False: 
             os.makedirs(fp)
