@@ -161,14 +161,6 @@ class GraphStructureGenerator(object):
 
     def __init__(self, structure_name: str, num_nodes: int = 50):
         self.num_nodes: int = num_nodes
-        self.allowed_structures: list[str] = [
-            "fully_connected",
-            "random_sparse",
-            "barabasi_albert",
-            "configuration",
-            "random_geometric",
-            "sparse_erdos",
-        ]
         self.structure_name = structure_name
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 

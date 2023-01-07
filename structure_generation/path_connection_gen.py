@@ -43,7 +43,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 1,
+        generated_edge_lifespan: int = 50,
         modality: str = "saturation",
     ) -> np.ndarray:
         """
@@ -98,7 +98,7 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 1
+        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 10
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -192,7 +192,7 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 20000,
+        max_iters: int = 1000,
         modality: str = "saturation",
         verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     num_edges_per_timestep = 1
 
     # for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
-    for structure_name in ["configuration"]:
+    for structure_name in ["random_geometric"]:
         import matplotlib.pyplot as plt
 
         graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500)
@@ -280,7 +280,7 @@ if __name__ == "__main__":
         x = ProceduralGraphGenerator(graph)
 
         x, r, t = x.infect_till_saturation(
-            modality="causal",
+            modality="saturation",
         )
         fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
