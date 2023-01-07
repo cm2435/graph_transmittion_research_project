@@ -50,7 +50,8 @@ class CycleGraph(GraphGenerator):
 
 
 class BarabasiAlbert(GraphGenerator):
-    """ """
+    """ 
+    """
 
     name = "barabasi_albert"
 
@@ -66,7 +67,8 @@ class BarabasiAlbert(GraphGenerator):
 
 
 class ConfigurationGraph(GraphGenerator):
-    """ """
+    """ 
+    """
 
     name = "configuration"
 
@@ -127,12 +129,10 @@ class RandomGeometric(GraphGenerator):
 
     def __init__(self, structure_name: str = "random_geometric", num_nodes: int = 50):
         super().__init__(structure_name=structure_name, num_nodes=num_nodes)
-        self.node_mean = 0
-        self.node_std = 2
         self.initial_adj_matrix = self.generate_adj_matrix()
 
-    def generate_adj_matrix(self) -> np.ndarray:
-        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, 0.05))
+    def generate_adj_matrix(self, graph_edge_radius : float) -> np.ndarray:
+        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, graph_edge_radius))
 
 
 class SparseErdos(GraphGenerator):
@@ -164,7 +164,9 @@ class GraphStructureGenerator(object):
         self.structure_name = structure_name
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 
-    def get_graph_structure(self) -> np.ndarray:
+    def get_graph_structure(self,
+        graph_edge_radius : float = None
+        ) -> np.ndarray:
         """ """
         structure_name = self.structure_name
         graph_mapping = {
@@ -175,6 +177,10 @@ class GraphStructureGenerator(object):
             "random_geometric": RandomGeometric,
             "sparse_erdos": SparseErdos,
         }
+        if graph_edge_radius is not None:
+            assert structure_name == "random_geometric" \
+            f"graph_edge radius is only for geometric graph model, {structure_name} was passed."\
+
         return graph_mapping[structure_name](num_nodes=self.num_nodes)
 
 
