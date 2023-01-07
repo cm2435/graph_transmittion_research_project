@@ -127,12 +127,17 @@ class RandomGeometric(GraphGenerator):
 
     name = "random_geometric"
 
-    def __init__(self, structure_name: str = "random_geometric", num_nodes: int = 50):
+    def __init__(self, structure_name: str = "random_geometric", num_nodes: int = 50, graph_edge_radius : float = None):
         super().__init__(structure_name=structure_name, num_nodes=num_nodes)
+        self.graph_edge_radius = graph_edge_radius
         self.initial_adj_matrix = self.generate_adj_matrix()
 
-    def generate_adj_matrix(self, graph_edge_radius : float) -> np.ndarray:
-        return nx.to_numpy_array(nx.random_geometric_graph(self.num_nodes, graph_edge_radius))
+    def generate_adj_matrix(self) -> np.ndarray:
+        return nx.to_numpy_array(nx.random_geometric_graph(
+            self.num_nodes, 
+            0.1 if self.graph_edge_radius is None else self.graph_edge_radius
+            )
+        )
 
 
 class SparseErdos(GraphGenerator):
@@ -159,14 +164,15 @@ class SparseErdos(GraphGenerator):
 class GraphStructureGenerator(object):
     """ """
 
-    def __init__(self, structure_name: str, num_nodes: int = 50):
+    def __init__(self, structure_name: str, num_nodes: int = 50, **kwargs):
         self.num_nodes: int = num_nodes
         self.structure_name = structure_name
+    
+        self.graph_edge_radius = kwargs.get('graph_edge_radius', None)
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 
-    def get_graph_structure(self,
-        graph_edge_radius : float = None
-        ) -> np.ndarray:
+        
+    def get_graph_structure(self) -> np.ndarray:
         """ """
         structure_name = self.structure_name
         graph_mapping = {
@@ -177,11 +183,11 @@ class GraphStructureGenerator(object):
             "random_geometric": RandomGeometric,
             "sparse_erdos": SparseErdos,
         }
-        if graph_edge_radius is not None:
-            assert structure_name == "random_geometric" \
-            f"graph_edge radius is only for geometric graph model, {structure_name} was passed."\
 
-        return graph_mapping[structure_name](num_nodes=self.num_nodes)
+        if structure_name == "random_geometric":
+            return graph_mapping[structure_name](num_nodes=self.num_nodes, graph_edge_radius = self.graph_edge_radius)
+        else: 
+            return graph_mapping[structure_name](num_nodes=self.num_nodes)
 
 
 if __name__ == "__main__":
