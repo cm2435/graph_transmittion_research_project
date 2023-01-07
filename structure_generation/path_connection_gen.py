@@ -179,8 +179,11 @@ class ProceduralGraphGenerator(object):
         """
         infected_nodes = []
         nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
-        infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
-        fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
+        #infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
+        infection_arr = np.zeros(len(nodepair_list))
+        #fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
+        fully_saturated_arr = np.ones(len(nodepair_list))
+
 
         while len(infected_nodes) < self.num_agents:
             infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
@@ -224,13 +227,14 @@ class ProceduralGraphGenerator(object):
         #Generate the giant graph as our initial structure from our 'choosing' structure
         #Generate the infected nodes list and the initial infection graph structure. 
         giant_graph = self._find_giant_structure(self.initial_structure)
-        infection_dict, fully_saturated_dict = self._make_infection_array(giant_graph)
+        infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
 
-        infection_dict_list = [infection_dict]
-        while infection_dict_list[-1] != fully_saturated_dict:
+        infection_arr_list = [infection_arr]
+        while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
+
             timesteps_to_full_saturation += 1
-            current_infection_dict = infection_dict_list[-1]
+            current_infection_arr = infection_arr_list[-1]
 
             graph_structure = self.structure_mutator._next_structure(
                 sampling_graph=giant_graph,
@@ -241,8 +245,8 @@ class ProceduralGraphGenerator(object):
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
-                    current_infection_dict[pair[0]]
-                    or current_infection_dict[pair[1]] == 1
+                    current_infection_arr[pair[0]]
+                    or current_infection_arr[pair[1]] == 1
                 ):
                     # Do not always guarrentee infection
                     infection_outcome = np.random.choice(
@@ -250,14 +254,14 @@ class ProceduralGraphGenerator(object):
                     )
                     if infection_outcome == 1:
                         (
-                            current_infection_dict[pair[0]],
-                            current_infection_dict[pair[1]],
+                            current_infection_arr[pair[0]],
+                            current_infection_arr[pair[1]],
                         ) = (1, 1)
 
-            infection_matrix_list.append(current_infection_dict)
+            infection_matrix_list.append(current_infection_arr)
             fraction_infected.append(
-                sum(value == 1 for value in current_infection_dict.values())
-                / len(current_infection_dict)
+                np.count_nonzero(current_infection_arr == 1)
+                / len(current_infection_arr)
             )
             if verbose: 
                 pbar.update(1)
