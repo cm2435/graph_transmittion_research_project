@@ -43,7 +43,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 50,
+        generated_edge_lifespan: int = 10 ,
         modality: str = "saturation",
     ) -> np.ndarray:
         """
@@ -125,7 +125,7 @@ class ProceduralGraphGenerator(object):
         graph = nx.from_numpy_array(graph_structure)
         nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
         if verbose:
-            print(f"graph structure with properties{nx_giant_graph}")
+            print(f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}""")
         giant_graph = nx.to_numpy_array(nx_giant_graph)
 
         return giant_graph
@@ -195,7 +195,7 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 1000,
+        max_iters: int = 5000,
         modality: str = "saturation",
         verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
@@ -267,6 +267,7 @@ class ProceduralGraphGenerator(object):
                 pbar.update(1)
             if timesteps_to_full_saturation == max_iters:
                 break
+
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
 
 
@@ -278,13 +279,13 @@ if __name__ == "__main__":
     for structure_name in ["random_geometric"]:
         import matplotlib.pyplot as plt
 
-        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500)
+        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500, graph_edge_radius = 0.2)
         graph = graphgen.initial_adj_matrix
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
         x, r, t = x.infect_till_saturation(
-            modality="saturation",
+            modality="causal",
         )
         fig, ax = plt.subplots()
         ax.plot([x for x in range(len(t))], t)
