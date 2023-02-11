@@ -28,12 +28,9 @@ def plot_saturation(
         ax2.set(ylabel="Gradient")
         ax2.legend()
 
-        try: 
-            p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
-            axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
-        except RuntimeError as e:
-            print(e)
-            pass 
+        p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+        axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+       
         
         axis.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
                         saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
@@ -44,7 +41,9 @@ def plot_saturation(
     def gradient_curves(axis):
         axis.set(xlabel='Saturation', ylabel='Gradient')
         axis.plot(saturation_fraction_mean, grad)
+
     fig, axes = plt.subplots(1, 2)
+    print("cov")
 
     fig.set_size_inches(8, 4.5)
     main_curve(axes.flat[0])

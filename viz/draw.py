@@ -25,6 +25,7 @@ def find_components(mat: np.array) -> np.array:
     return out
 # Draw a picture of an adjacency matrix. No customization, aims to do the right thing.
 #   mat: adjacency matrix
+
 def draw_graph(mat: np.array, path: str, label_name=""):
     import os
 

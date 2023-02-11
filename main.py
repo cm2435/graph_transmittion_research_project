@@ -127,14 +127,12 @@ if __name__ == "__main__":
         "kurtosis": scipy.stats.kurtosis(convergence_steps),
         "num_nodes": num_nodes,
     }
-
     plot_saturation(
             saturation_fraction_mean= saturation_timestep,
             saturation_fraction_std= saturation_timestep_std,
             graph_type= structure_name,
             save_filename= True
             )
-
     import pandas as pd
 
     if parsedArgs.csv_dir is not None:
