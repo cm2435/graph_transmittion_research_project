@@ -28,9 +28,12 @@ def plot_saturation(
         ax2.set(ylabel="Gradient")
         ax2.legend()
 
-        p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
-        axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
-       
+        try: 
+            p, cov = curve_fit(logistic, timesteps, saturation_fraction_mean)
+            axis.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        except RuntimeError as e:
+            print(e)
+            pass 
         
         axis.fill_between(timesteps, saturation_fraction_mean+saturation_fraction_std,
                         saturation_fraction_mean-saturation_fraction_std, alpha=0.3, label="1.Std across all runs")
@@ -41,9 +44,7 @@ def plot_saturation(
     def gradient_curves(axis):
         axis.set(xlabel='Saturation', ylabel='Gradient')
         axis.plot(saturation_fraction_mean, grad)
-
     fig, axes = plt.subplots(1, 2)
-    print("cov")
 
     fig.set_size_inches(8, 4.5)
     main_curve(axes.flat[0])
@@ -52,21 +53,11 @@ def plot_saturation(
     #ßfig.subplots_adjust(top=0.1, left=0.1)
     from datetime import datetime
     # Move this to somewhere else
+
     fig.suptitle(f"{graph_type}, plotted on {str(datetime.now())}")
-    # plt.show()
+    plt.show()
     if save_filename:
         fig.savefig(
             str(Path(__file__).parents[1] / "data" / "figures") + f'/{graph_type}.png')
 
 
-if __name__ == "__main__":
-    import seaborn as sns
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import pandas as pd
-
-    means = np.array([x for x in range(100)])
-    stds = np.array([random.randint(0, 20) for x in range(100)])
-    timesteps = [x for x in range(100)]
-
-    plot_saturation(timesteps, means, stds)

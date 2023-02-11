@@ -133,6 +133,7 @@ if __name__ == "__main__":
             graph_type= structure_name,
             save_filename= True
             )
+            
     import pandas as pd
 
     if parsedArgs.csv_dir is not None:
