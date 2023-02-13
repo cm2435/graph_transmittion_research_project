@@ -1,4 +1,4 @@
-from adj_matrix_gen import GraphStructureGenerator
+from .adj_matrix_gen import GraphStructureGenerator
 import numpy as np
 import pandas as pd
 import random
@@ -8,6 +8,22 @@ import networkx as nx
 import gc
 import os
 from scipy.optimize import curve_fit
+from scipy.stats import kstest, chisquare, ks_2samp, epps_singleton_2samp
+
+
+class StatsUtils(object):
+    """
+    """
+    def __init__(self):
+        pass
+
+    def chisquared_reduced(x, y, degrees_freedom : int = 3):
+        '''
+        '''
+        chisquare_score = chisquare(x, y)
+        reduced_chisquared = chisquare_score / (len(x) - degrees_freedom -1) # 3 degrees of freedom for the quartic fit hence -3 - 1 
+        return reduced_chisquared
+
 
 class GraphStructureMutator(object):
     """
@@ -98,7 +114,7 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 250, num_agents: int = 1
+        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -128,7 +144,7 @@ class ProceduralGraphGenerator(object):
             print(f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}""")
         giant_graph = nx.to_numpy_array(nx_giant_graph)
 
-        return giant_graph
+        return giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
 
     def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
         """
@@ -179,9 +195,7 @@ class ProceduralGraphGenerator(object):
         """
         infected_nodes = []
         nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
-        #infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
         infection_arr = np.zeros(largest_subcomponent.shape[0])
-        #fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
         fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
 
         while len(infected_nodes) < self.num_agents:
@@ -194,7 +208,7 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 1000,
+        max_iters: int = 2000,
         modality: str = "saturation",
         verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
@@ -225,7 +239,7 @@ class ProceduralGraphGenerator(object):
             pbar = tqdm.tqdm(total=max_iters)
         #Generate the giant graph as our initial structure from our 'choosing' structure
         #Generate the infected nodes list and the initial infection graph structure. 
-        giant_graph = self._find_giant_structure(self.initial_structure)
+        giant_graph, average_degree = self._find_giant_structure(self.initial_structure)
         infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
 
@@ -269,46 +283,54 @@ class ProceduralGraphGenerator(object):
             if timesteps_to_full_saturation == max_iters:
                 break
 
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
-
-def logistic(x, A, k, x0):
-    return A / (1.0 + np.exp(-k * (x - x0)))
-    
+        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, average_degree
 
 if __name__ == "__main__":
     global num_edges_per_timestep
     num_edges_per_timestep = 1
-
+    stats_mod = StatsUtils()
     # for structure_name in ["fully_connected", "random_sparse", "barabasi_albert", "configuration", "random_geometric", "sparse_erdos"]:
-    for structure_name in ["random_geometric"]:
-        import matplotlib.pyplot as plt
+    y_prime = []
+    graph_edge_radius = [0.025, 0.05, 0.1, 0.2, 0.5, 1]
+    num_repeats = 3
+    average_degrees = []
+    results_dict = {k : [] for k in graph_edge_radius}
+    for graph_rad in tqdm.tqdm(graph_edge_radius):
+        mean_degrees = []
+        for structure_name in ["random_geometric"]:
+            for repeat in range(num_repeats): 
+                import matplotlib.pyplot as plt
+                graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500, graph_edge_radius = graph_rad)
+                graph = graphgen.initial_adj_matrix
+                graph_rand = graphgen.get_graph_structure().initial_adj_matrix
+                x = ProceduralGraphGenerator(graph)
 
-        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=250, graph_edge_radius = 0.5)
-        graph = graphgen.initial_adj_matrix
-        graph_rand = graphgen.get_graph_structure().initial_adj_matrix
-        x = ProceduralGraphGenerator(graph)
+                infection_matrix_list, timesteps_saturation, fraction_infected_list, average_degree = x.infect_till_saturation(
+                    modality="causal", verbose= False
+                )
+                timesteps = [x for x in range(timesteps_saturation)]
+                import random 
+                try: 
+                    p, cov = curve_fit(logistic, timesteps, fraction_infected_list)
+                    logistic_curve_data = logistic(timesteps, *p)
+                    results_dict[graph_rad].extend(fraction_infected_list - logistic_curve_data)
+                    mean_degrees.append(average_degree)
+                except RuntimeError as e:
+                    print(e)
+                    pass 
+        average_degrees.append(np.mean(mean_degrees))
+    results_dict = {k : v for k,v in list(zip(average_degrees, results_dict.values()))}
+    import seaborn as sns 
+    for key in results_dict.keys(): 
+        sns.kdeplot(results_dict[key])
+    plt.show()
 
-        infection_matrix_list, timesteps_saturation, fraction_infected_list = x.infect_till_saturation(
-            modality="saturation",
-        )
-        timesteps = [x for x in range(timesteps_saturation)]
-        fig, ax = plt.subplots()
-        plt.plot(timesteps, fraction_infected_list)
-        try: 
-            p, cov = curve_fit(logistic, timesteps, fraction_infected_list)
-            plt.plot(timesteps, logistic(timesteps, *p), label="logistic")
-        except RuntimeError as e:
-            print(e)
-            pass 
-            
-        plt.show()
 
 
+    """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
+    if os.path.isdir(fp) is False: 
+        os.makedirs(fp)
+    fig.savefig(f"{fp}/{structure_name}.png")
 
-        """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
-        if os.path.isdir(fp) is False: 
-            os.makedirs(fp)
-        fig.savefig(f"{fp}/{structure_name}.png")
-
-        del plt
-        gc.collect()"""
+    del plt
+    gc.collect()"""

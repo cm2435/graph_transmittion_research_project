@@ -4,3 +4,4 @@ tqdm==4.64.0
 scipy==1.8.1
 pandas
 matplotlib
+seaborn
