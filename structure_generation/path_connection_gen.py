@@ -7,7 +7,7 @@ from typing import List, Tuple, Optional
 import networkx as nx
 import gc
 import os
-
+from scipy.optimize import curve_fit
 
 class GraphStructureMutator(object):
     """
@@ -43,7 +43,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 10 ,
+        generated_edge_lifespan: int = 100 ,
         modality: str = "saturation",
     ) -> np.ndarray:
         """
@@ -98,7 +98,7 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 10
+        self, initial_structure: np.ndarray, num_nodes: int = 250, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -180,10 +180,9 @@ class ProceduralGraphGenerator(object):
         infected_nodes = []
         nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
         #infection_arr = {k: 0 for k in set([x[0] for x in nodepair_list])}
-        infection_arr = np.zeros(len(nodepair_list))
+        infection_arr = np.zeros(largest_subcomponent.shape[0])
         #fully_saturated_arr = {k: 1 for k in set([x[0] for x in nodepair_list])}
-        fully_saturated_arr = np.ones(len(nodepair_list))
-
+        fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
 
         while len(infected_nodes) < self.num_agents:
             infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
@@ -195,7 +194,7 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 5000,
+        max_iters: int = 1000,
         modality: str = "saturation",
         verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
@@ -232,16 +231,18 @@ class ProceduralGraphGenerator(object):
 
         infection_arr_list = [infection_arr]
         while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
-
+            #Update timesteps and take current infection array
             timesteps_to_full_saturation += 1
             current_infection_arr = infection_arr_list[-1]
-
+            #print(current_infection_arr.shape, current_infection_arr, np.count_nonzero(current_infection_arr == 1))
+            import time
+            #time.sleep(0.1)
+            #Update the graph structure to infect a new node
             graph_structure = self.structure_mutator._next_structure(
                 sampling_graph=giant_graph,
                 updating_graph=initial_graph,
                 modality=modality,
             )
-
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
@@ -270,6 +271,9 @@ class ProceduralGraphGenerator(object):
 
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
 
+def logistic(x, A, k, x0):
+    return A / (1.0 + np.exp(-k * (x - x0)))
+    
 
 if __name__ == "__main__":
     global num_edges_per_timestep
@@ -279,17 +283,28 @@ if __name__ == "__main__":
     for structure_name in ["random_geometric"]:
         import matplotlib.pyplot as plt
 
-        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=500, graph_edge_radius = 0.2)
+        graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=250, graph_edge_radius = 0.5)
         graph = graphgen.initial_adj_matrix
         graph_rand = graphgen.get_graph_structure().initial_adj_matrix
         x = ProceduralGraphGenerator(graph)
 
-        x, r, t = x.infect_till_saturation(
-            modality="causal",
+        infection_matrix_list, timesteps_saturation, fraction_infected_list = x.infect_till_saturation(
+            modality="saturation",
         )
+        timesteps = [x for x in range(timesteps_saturation)]
         fig, ax = plt.subplots()
-        ax.plot([x for x in range(len(t))], t)
+        plt.plot(timesteps, fraction_infected_list)
+        try: 
+            p, cov = curve_fit(logistic, timesteps, fraction_infected_list)
+            plt.plot(timesteps, logistic(timesteps, *p), label="logistic")
+        except RuntimeError as e:
+            print(e)
+            pass 
+            
         plt.show()
+
+
+
         """fp = f"/home/cm2435/Desktop/university_final_year_cw/data/figures_sequential_choose_{num_edges_per_timestep}"
         if os.path.isdir(fp) is False: 
             os.makedirs(fp)
