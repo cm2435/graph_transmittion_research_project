@@ -87,7 +87,7 @@ if __name__ == "__main__":
     configuration.read(parsedArgs.config_file)
 
     final_dicts = []
-    conf = configuration["RUN"]
+    conf = configuration["saturation"]
     num_initial_agents = int(conf["initial_agents"])
     num_nodes = int(conf["nodes"])
     structure_name = conf["structure"]
