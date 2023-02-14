@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
             x = ProceduralGraphGenerator(graph)
             infection_matrix_list, timesteps_saturation, fraction_infected_list, average_degree = x.infect_till_saturation(
-                modality="causal", verbose= False
+                modality="saturation", verbose= False
             )
             timesteps = [x for x in range(timesteps_saturation)]
             try: 
@@ -42,6 +42,7 @@ if __name__ == "__main__":
     
     #Update keys of dictionary so that keys are the (averaged) mean degree of the simulations networks
     residuals_dict = {k : v for k,v in list(zip(average_degrees, residuals_dict.values()))}
+    least_noisy_data = residuals_dict
     for key in residuals_dict.keys(): 
         sns.kdeplot(residuals_dict[key], label=f"mean degree : {round(key, 2)}")
     plt.legend()
