@@ -15,6 +15,9 @@ reachability:
     num_simulation_repeats : 3
 
   structure_name : "barabasi_albert"
+    nodes : 500 
+    graph_edge_radii : [0.025, 0.05, 0.1, 0.2, 0.5, 1]
+    num_simulation_repeats : 3
 # Configuration for graph visualizations
 VIZ:
 # Where to output .png files representing graph structures.
