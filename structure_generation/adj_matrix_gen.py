@@ -58,10 +58,10 @@ class BarabasiAlbert(GraphGenerator):
         super().__init__(structure_name=structure_name, num_nodes=num_nodes)
         self.initial_adj_matrix = self.generate_adj_matrix()
 
-    def generate_adj_matrix(self) -> np.ndarray:
+    def generate_adj_matrix(self, node_degree : int) -> np.ndarray:
         import networkx as nx
 
-        graph = nx.barabasi_albert_graph(self.num_nodes, 1)
+        graph = nx.barabasi_albert_graph(self.num_nodes, node_degree)
         return nx.to_numpy_array(graph)
 
 
@@ -173,6 +173,7 @@ class GraphStructureGenerator(object):
         self.structure_name = structure_name
 
         self.graph_edge_radius = kwargs.get("graph_edge_radius", None)
+        self.node_degree = kwargs.get("node_degree", None)
         self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
 
     def get_graph_structure(self) -> np.ndarray:

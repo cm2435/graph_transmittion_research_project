@@ -48,3 +48,4 @@ Things to control for:
 Things to vairy: 
     Mean path length (graph structure)
     Community existance (graph structure)
+    
