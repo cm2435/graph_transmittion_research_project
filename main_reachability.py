@@ -12,7 +12,8 @@ from util.functions import logistic
 from structure_generation.path_connection_gen import ProceduralGraphGenerator, StatsUtils, GraphStructureGenerator
 
 if __name__ == "__main__":
-    conf = yaml.safe_load(Path('config.yml').read_text())['reachability']
+    structure_name = "barabasi_albert"
+    conf = yaml.safe_load(Path('config.yml').read_text())['reachability'][structure_name]
 
     average_degrees = []
     residuals_dict = {k : [] for k in conf['graph_edge_radii']}
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     for graph_rad in tqdm.tqdm(conf['graph_edge_radii']):
         mean_degree_simulation_runs = []
         for repeat in range(int(conf['num_simulation_repeats'])): 
-            graphgen = GraphStructureGenerator(structure_name=conf['structure_name'], num_nodes=int(conf['nodes']), graph_edge_radius = float(graph_rad))
+            graphgen = GraphStructureGenerator(structure_name=structure_name, num_nodes=int(conf['nodes']), mean_degree = float(graph_rad))
             graph = graphgen.initial_adj_matrix
             graph_rand = graphgen.get_graph_structure().initial_adj_matrix
 

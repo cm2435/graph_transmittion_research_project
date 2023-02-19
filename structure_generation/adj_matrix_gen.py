@@ -187,10 +187,15 @@ class GraphStructureGenerator(object):
             "random_geometric": RandomGeometric,
             "sparse_erdos": SparseErdos,
         }
+        print(self.node_degree)
 
         if structure_name == "random_geometric":
             return graph_mapping[structure_name](
                 num_nodes=self.num_nodes, graph_edge_radius=self.graph_edge_radius
+            )
+        elif structure_name == "barabasi_albert":
+            return graph_mapping[structure_name](
+                num_nodes=self.num_nodes, node_degree=self.node_degree
             )
         else:
             return graph_mapping[structure_name](num_nodes=self.num_nodes)

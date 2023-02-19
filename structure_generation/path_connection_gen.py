@@ -239,7 +239,7 @@ class ProceduralGraphGenerator(object):
             pbar = tqdm.tqdm(total=max_iters)
         #Generate the giant graph as our initial structure from our 'choosing' structure
         #Generate the infected nodes list and the initial infection graph structure. 
-        giant_graph, average_degree = self._find_giant_structure(self.initial_structure)
+        giant_graph, average_degree = self._find_giant_structure(self.initial_structure, verbose= verbose)
         infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
 

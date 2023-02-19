@@ -9,15 +9,14 @@ saturation:
 
 #Configuration for main_reachability
 reachability:
-  structure_name : "random_geometric"
+  num_simulation_runs : 50
+  random_geometric:
     nodes : 500 
     graph_edge_radii : [0.025, 0.05, 0.1, 0.2, 0.5, 1]
-    num_simulation_repeats : 3
 
-  structure_name : "barabasi_albert"
+  barabasi_albert:
     nodes : 500 
-    graph_edge_radii : [0.025, 0.05, 0.1, 0.2, 0.5, 1]
-    num_simulation_repeats : 3
+    node_degree : [2,5,10,20,100]
 # Configuration for graph visualizations
 VIZ:
 # Where to output .png files representing graph structures.
