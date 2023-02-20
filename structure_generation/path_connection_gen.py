@@ -201,8 +201,18 @@ class ProceduralGraphGenerator(object):
 
         return infection_arr, fully_saturated_arr
 
-    def _generate_network_statistics(graph : Union[np.ndarray, int]):
-        pass 
+    @staticmethod
+    def _generate_network_statistics(graph : Union[np.ndarray, nx.classes.graph.Graph]) -> dict:
+        '''
+        '''
+        info_dict = {}
+        if isinstance(graph, np.ndarray): 
+            graph = nx.from_numpy_array(graph)
+        info_dict['clustering_coefficient'] = nx.average_clustering(graph)
+        info_dict['degree_assortivity'] = nx.degree_pearson_correlation_coefficient(graph)
+        info_dict['mean_shortest_pathlength'] = nx.average_shortest_path_length(graph)        
+
+        return info_dict
 
     def infect_till_saturation(
         self,
@@ -282,6 +292,6 @@ class ProceduralGraphGenerator(object):
         info_dict = {
             "average_degree" : average_degree,
             "num_nodes" : len(current_infection_arr),
-            ""
         }
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, average_degree, info_dict 
+        info_dict.update(self._generate_network_statistics(giant_graph))
+        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, info_dict 
