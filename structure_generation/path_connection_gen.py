@@ -1,14 +1,10 @@
 from .adj_matrix_gen import GraphStructureGenerator
 import numpy as np
-import pandas as pd
 import random
 import tqdm
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 import networkx as nx
-import gc
-import os
-from scipy.optimize import curve_fit
-from scipy.stats import kstest, chisquare, ks_2samp, epps_singleton_2samp
+from scipy.stats import kstest, chisquare
 
 
 class StatsUtils(object):
@@ -205,6 +201,9 @@ class ProceduralGraphGenerator(object):
 
         return infection_arr, fully_saturated_arr
 
+    def _generate_network_statistics(graph : Union[np.ndarray, int]):
+        pass 
+
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
@@ -233,7 +232,7 @@ class ProceduralGraphGenerator(object):
             [],
             [],
             [],
-            0,
+            0
         )
         if verbose: 
             pbar = tqdm.tqdm(total=max_iters)
@@ -248,9 +247,6 @@ class ProceduralGraphGenerator(object):
             #Update timesteps and take current infection array
             timesteps_to_full_saturation += 1
             current_infection_arr = infection_arr_list[-1]
-            #print(current_infection_arr.shape, current_infection_arr, np.count_nonzero(current_infection_arr == 1))
-            import time
-            #time.sleep(0.1)
             #Update the graph structure to infect a new node
             graph_structure = self.structure_mutator._next_structure(
                 sampling_graph=giant_graph,
@@ -282,5 +278,10 @@ class ProceduralGraphGenerator(object):
                 pbar.update(1)
             if timesteps_to_full_saturation == max_iters:
                 break
-
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, average_degree
+        
+        info_dict = {
+            "average_degree" : average_degree,
+            "num_nodes" : len(current_infection_arr),
+            ""
+        }
+        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, average_degree, info_dict 
