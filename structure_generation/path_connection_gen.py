@@ -125,7 +125,7 @@ class ProceduralGraphGenerator(object):
 
     @staticmethod
     def _find_giant_structure(
-        graph_structure: np.ndarray, verbose: bool = True
+        graph_structure: np.ndarray, verbose: bool = False
     ) -> np.ndarray:
         """
         Helper method to find the giant graph of a adj matrix represented graph structure.

@@ -187,7 +187,6 @@ class GraphStructureGenerator(object):
             "random_geometric": RandomGeometric,
             "sparse_erdos": SparseErdos,
         }
-        print(self.node_degree)
 
         if structure_name == "random_geometric":
             return graph_mapping[structure_name](
