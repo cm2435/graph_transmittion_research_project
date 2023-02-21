@@ -6,9 +6,9 @@ import multiprocessing
 import scipy
 import pandas as pd
 import itertools
-from typing import List 
+from typing import List
 
-#from structure_generation.adj_matrix_gen import GraphStructureGenerator
+# from structure_generation.adj_matrix_gen import GraphStructureGenerator
 from structure_generation.adj_matrix_gen import GraphStructureGenerator
 
 import numpy as np
@@ -18,22 +18,24 @@ import networkx as nx
 from typing import Type
 
 
-
 class ErdosGraphSimulator(object):
     """ """
 
     def __init__(
-        self, num_nodes: int = 250, 
+        self,
+        num_nodes: int = 250,
         num_agents: int = 1,
         num_timestep_edges: int = 5,
-        structure_name : str = "fully_connected"
+        structure_name: str = "fully_connected",
     ):
 
         self.structure_name = structure_name
         self.num_nodes: int = num_nodes
         self.num_agents: int = num_agents
         self.num_timestep_edges: int = num_timestep_edges
-        self.graph_generator: GraphStructureGenerator = GraphStructureGenerator(structure_name= structure_name, num_nodes= num_nodes)
+        self.graph_generator: GraphStructureGenerator = GraphStructureGenerator(
+            structure_name=structure_name, num_nodes=num_nodes
+        )
         self.dynamic_structures = ["random_sparse"]
 
     @property
@@ -53,9 +55,8 @@ class ErdosGraphSimulator(object):
 
         return infection_array
 
-
     def infect_till_saturation(
-        self, infection_probability: float = 1, max_iters = 50
+        self, infection_probability: float = 1, max_iters=50
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Procedure to measure time to infection saturation for a given set of initial conditions
@@ -77,11 +78,13 @@ class ErdosGraphSimulator(object):
         ):
             timesteps_to_full_saturation += 1
             current_infection_matrix = infection_matrix_list[-1]
-            
-            #If dynamic graph structure like random sparse, get new adj matrix. If static, stay with the same
+
+            # If dynamic graph structure like random sparse, get new adj matrix. If static, stay with the same
             if self.structure_name in self.dynamic_structures:
-                adj_matrix = self.graph_generator.get_graph_structure().initial_adj_matrix
-            else: 
+                adj_matrix = (
+                    self.graph_generator.get_graph_structure().initial_adj_matrix
+                )
+            else:
                 adj_matrix = self.graph_generator.initial_adj_matrix
 
             nodepair_list = np.dstack(np.where(adj_matrix == 1))[0]
@@ -101,17 +104,18 @@ class ErdosGraphSimulator(object):
                         ) = (1, 1)
 
             infection_matrix_list.append(current_infection_matrix)
-            fraction_infected.append(np.count_nonzero(current_infection_matrix == 1) / len(current_infection_matrix))
+            fraction_infected.append(
+                np.count_nonzero(current_infection_matrix == 1)
+                / len(current_infection_matrix)
+            )
 
             if timesteps_to_full_saturation == max_iters:
                 break
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected 
+        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected
 
-
-   
 
 if __name__ == "__main__":
-    x = ErdosGraphSimulator(structure_name= "random_geometric")
+    x = ErdosGraphSimulator(structure_name="random_geometric")
     print(x.structure_name)
-    t,q,r = x.infect_till_saturation()
+    t, q, r = x.infect_till_saturation()
     print(q)

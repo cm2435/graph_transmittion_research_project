@@ -54,18 +54,23 @@ class BarabasiAlbert(GraphGenerator):
 
     name = "barabasi_albert"
 
-    def __init__(self, structure_name: str = "barabasi_albert", num_nodes: int = 50, node_degree : int = None):
+    def __init__(
+        self,
+        structure_name: str = "barabasi_albert",
+        num_nodes: int = 50,
+        node_degree: int = None,
+    ):
         super().__init__(structure_name=structure_name, num_nodes=num_nodes)
-        self.node_degree = node_degree,
+        self.node_degree = (node_degree,)
         self.initial_adj_matrix = self.generate_adj_matrix()
 
     def generate_adj_matrix(self) -> np.ndarray:
         import networkx as nx
+
         if isinstance(self.node_degree, tuple):
             self.node_degree = self.node_degree[0]
         graph = nx.barabasi_albert_graph(
-            self.num_nodes, 
-            self.node_degree if self.node_degree is not None else 3
+            self.num_nodes, self.node_degree if self.node_degree is not None else 3
         )
         return nx.to_numpy_array(graph)
 

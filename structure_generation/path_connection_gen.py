@@ -8,16 +8,17 @@ from scipy.stats import kstest, chisquare
 
 
 class StatsUtils(object):
-    """
-    """
+    """ """
+
     def __init__(self):
         pass
 
-    def chisquared_reduced(x, y, degrees_freedom : int = 3):
-        '''
-        '''
+    def chisquared_reduced(x, y, degrees_freedom: int = 3):
+        """ """
         chisquare_score = chisquare(x, y)
-        reduced_chisquared = chisquare_score / (len(x) - degrees_freedom -1) # 3 degrees of freedom for the quartic fit hence -3 - 1 
+        reduced_chisquared = chisquare_score / (
+            len(x) - degrees_freedom - 1
+        )  # 3 degrees of freedom for the quartic fit hence -3 - 1
         return reduced_chisquared
 
 
@@ -55,7 +56,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 100 ,
+        generated_edge_lifespan: int = 100,
         modality: str = "irreversable",
     ) -> np.ndarray:
         """
@@ -91,21 +92,21 @@ class ProceduralGraphGenerator(object):
     Class to generate a graph structure, infect it with agents, and spread the infection till saturation.
 
     Parameters:
-        initial_structure (np.ndarray): 
+        initial_structure (np.ndarray):
             2D array representing the adjacency matrix of the initial graph structure.
-        num_nodes (int): 
+        num_nodes (int):
             Number of nodes in the graph structure. Default is 200.
-        num_agents (int): 
+        num_agents (int):
             Number of agents that are initially infected. Default is 1.
-        
+
     Attributes:
-        num_nodes (int): 
+        num_nodes (int):
             Number of nodes in the graph structure.
-        num_agents (int): 
+        num_agents (int):
             Number of agents that are initially infected.
-        initial_structure (np.ndarray): 
+        initial_structure (np.ndarray):
             2D array representing the adjacency matrix of the initial graph structure.
-        structure_mutator (GraphStructureMutator): 
+        structure_mutator (GraphStructureMutator):
             Instance of GraphStructureMutator with the `initial_structure` as the initial structure.
     """
 
@@ -125,33 +126,51 @@ class ProceduralGraphGenerator(object):
     ) -> np.ndarray:
         """
         Helper method to find the giant graph of a adj matrix represented graph structure.
-        
+
         Parameters:
             graph_structure (np.ndarray): 2D array representing the adjacency matrix of the input graph structure.
             verbose (bool): Flag to enable/disable printing of information. Default is True.
-            
+
         Returns:
             np.ndarray: 2D array representing the adjacency matrix of the giant graph.
-            
+
         """
         graph = nx.from_numpy_array(graph_structure)
         nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
         if verbose:
-            print(f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}""")
+            print(
+                f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}"""
+            )
         giant_graph = nx.to_numpy_array(nx_giant_graph)
 
         return giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
 
+    @staticmethod
+    def _generate_network_statistics(
+        graph: Union[np.ndarray, nx.classes.graph.Graph]
+    ) -> dict:
+        """ """
+        info_dict = {}
+        if isinstance(graph, np.ndarray):
+            graph = nx.from_numpy_array(graph)
+        info_dict["clustering_coefficient"] = nx.average_clustering(graph)
+        info_dict["degree_assortivity"] = nx.degree_pearson_correlation_coefficient(
+            graph
+        )
+        info_dict["mean_shortest_pathlength"] = nx.average_shortest_path_length(graph)
+
+        return info_dict
+
     def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
         """
         Method to generate the initial graph structure by adding a random edge to the `giant_graph`.
-        
+
         Parameters:
             giant_graph (np.ndarray): 2D array representing the adjacency matrix of the giant graph.
-            
+
         Returns:
             np.ndarray: 2D array representing the adjacency matrix of the initial graph.
-            
+
         """
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
@@ -163,21 +182,24 @@ class ProceduralGraphGenerator(object):
 
         return initial_graph
 
-    def _find_reachability_matrix(self,
-        input_graph : np.ndarray, 
-    ) -> np.ndarray: 
-        """
-        """
+    def _find_reachability_matrix(
+        self,
+        input_graph: np.ndarray,
+    ) -> np.ndarray:
+        """ """
         graph = nx.from_numpy_array(input_graph)
         assert input_graph.shape[0] == input_graph.shape[1]
-        
+
         reachability_arrays = []
         for _ in range(input_graph.shape[0]):
-            reachability_array = np.zeros(input_graph.shape[0])   
-            for reachable_path_idx, path_length in nx.single_target_shortest_path_length(graph, _, cutoff=None):
+            reachability_array = np.zeros(input_graph.shape[0])
+            for (
+                reachable_path_idx,
+                path_length,
+            ) in nx.single_target_shortest_path_length(graph, _, cutoff=None):
                 reachability_array[reachable_path_idx] = path_length
             reachability_arrays.append(reachability_array)
-    
+
         final_matrix = np.vstack(reachability_arrays)
         final_matrix[final_matrix == 0] = np.inf
 
@@ -201,25 +223,12 @@ class ProceduralGraphGenerator(object):
 
         return infection_arr, fully_saturated_arr
 
-    @staticmethod
-    def _generate_network_statistics(graph : Union[np.ndarray, nx.classes.graph.Graph]) -> dict:
-        '''
-        '''
-        info_dict = {}
-        if isinstance(graph, np.ndarray): 
-            graph = nx.from_numpy_array(graph)
-        info_dict['clustering_coefficient'] = nx.average_clustering(graph)
-        info_dict['degree_assortivity'] = nx.degree_pearson_correlation_coefficient(graph)
-        info_dict['mean_shortest_pathlength'] = nx.average_shortest_path_length(graph)        
-
-        return info_dict
-
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
         max_iters: int = 2000,
         modality: str = "irreversable",
-        verbose : bool = True
+        verbose: bool = True,
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Method to spread the infection till saturation in the graph.
@@ -228,36 +237,38 @@ class ProceduralGraphGenerator(object):
             infection_probability (float): Probability of infection spread between nodes.
             num_iterations (int): Number of iterations to run the infection spread.
             verbose (bool): Flag to enable/disable printing of information. Default is True.
-            
+
         Returns:
             tuple:
-                infection_iteration_array (list): 
+                infection_iteration_array (list):
                     List of dictionaries with keys as the node indices and values as the infection status (0 or 1) at each iteration.
                 fully_saturated_iteration_array (list):
                     List of dictionaries with keys as the node indices and values as 1, indicating that the node is present in the graph at each iteration.
-                success_iteration (int): 
+                success_iteration (int):
                     The iteration number where the infection spread has reached saturation or -1 if the infection did not reach saturation.
         """
-        fraction_infected, infection_matrix_list, average_reachability, timesteps_to_full_saturation = (
-            [],
-            [],
-            [],
-            0
-        )
-        if verbose: 
+        (
+            fraction_infected,
+            infection_matrix_list,
+            average_reachability,
+            timesteps_to_full_saturation,
+        ) = ([], [], [], 0)
+        if verbose:
             pbar = tqdm.tqdm(total=max_iters)
-        #Generate the giant graph as our initial structure from our 'choosing' structure
-        #Generate the infected nodes list and the initial infection graph structure. 
-        giant_graph, average_degree = self._find_giant_structure(self.initial_structure, verbose= verbose)
+        # Generate the giant graph as our initial structure from our 'choosing' structure
+        # Generate the infected nodes list and the initial infection graph structure.
+        giant_graph, average_degree = self._find_giant_structure(
+            self.initial_structure, verbose=verbose
+        )
         infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
         initial_graph = self._make_initial_structure(giant_graph)
 
         infection_arr_list = [infection_arr]
         while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
-            #Update timesteps and take current infection array
+            # Update timesteps and take current infection array
             timesteps_to_full_saturation += 1
             current_infection_arr = infection_arr_list[-1]
-            #Update the graph structure to infect a new node
+            # Update the graph structure to infect a new node
             graph_structure = self.structure_mutator._next_structure(
                 sampling_graph=giant_graph,
                 updating_graph=initial_graph,
@@ -284,15 +295,20 @@ class ProceduralGraphGenerator(object):
                 np.count_nonzero(current_infection_arr == 1)
                 / len(current_infection_arr)
             )
-            if verbose: 
+            if verbose:
                 pbar.update(1)
             if timesteps_to_full_saturation == max_iters:
                 break
-        
+
         info_dict = {
-            "average_degree" : average_degree,
-            "num_nodes" : len(current_infection_arr),
-            "modality" : modality
+            "average_degree": average_degree,
+            "num_nodes": len(current_infection_arr),
+            "modality": modality,
         }
         info_dict.update(self._generate_network_statistics(giant_graph))
-        return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, info_dict 
+        return (
+            infection_matrix_list,
+            timesteps_to_full_saturation,
+            fraction_infected,
+            info_dict,
+        )

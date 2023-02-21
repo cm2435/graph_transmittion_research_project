@@ -9,9 +9,10 @@ import argparse
 from graph_structure.erdos_graph import ErdosGraphSimulator
 from structure_generation.adj_matrix_gen import *
 from collections import namedtuple
-from typing import Optional, Tuple, List 
+from typing import Optional, Tuple, List
 from viz.graph_plot import plot_saturation, plot_reachability
 import gc
+
 
 def simulate_saturation(params) -> Tuple[List[float], List[float]]:
     # I hate this
@@ -22,9 +23,9 @@ def simulate_saturation(params) -> Tuple[List[float], List[float]]:
         structure_name=structure_name,
     )
     _, iterations, fraction_infected = x.infect_till_saturation(
-        infection_probability= transmittion_prob, max_iters = max_iters
+        infection_probability=transmittion_prob, max_iters=max_iters
     )
-    del x, _ 
+    del x, _
     gc.collect()
     return iterations, fraction_infected
 
@@ -33,6 +34,7 @@ def simulate_saturation(params) -> Tuple[List[float], List[float]]:
 def genAndViz(args, conf) -> None:
     import subprocess
     from multiprocessing.pool import ThreadPool as Pool
+
     def job(structure):
         RecClass = GraphGenerator.from_string(structure)
         gen = RecClass(structure, int(conf["RUN"]["nodes"]))
@@ -42,12 +44,13 @@ def genAndViz(args, conf) -> None:
 
         full = os.path.join(conf["VIZ"]["output_dir"], structure + ".png")
         viz.draw.draw_graph(mat, path=full, label_name=structure)
+
     if args.graph_name is None:
         with Pool() as pool:
             pool.map(job, GraphGenerator.get_graph_names())
     else:
         job(args.graph_name)
-    return None 
+    return None
 
 
 if __name__ == "__main__":
@@ -81,8 +84,9 @@ if __name__ == "__main__":
         "gen-graph", help="Generate an example graph using each available method"
     )
     graphDebug.set_defaults(func=genAndViz)
-    graphDebug.add_argument("--graph", dest="graph_name",
-                            help="Sample & draw a graph only with this name")
+    graphDebug.add_argument(
+        "--graph", dest="graph_name", help="Sample & draw a graph only with this name"
+    )
     parsedArgs = parser.parse_args()
     configuration.read(parsedArgs.config_file)
 
@@ -91,9 +95,9 @@ if __name__ == "__main__":
     num_initial_agents = int(conf["initial_agents"])
     num_nodes = int(conf["nodes"])
     structure_name = conf["structure"]
-    simulation_iters = int(conf['simulation_iterations'])
-    transmittion_prob = float(conf['transmittion_prob'])
-    max_iters = int(conf['max_iterations'])
+    simulation_iters = int(conf["simulation_iterations"])
+    transmittion_prob = float(conf["transmittion_prob"])
+    max_iters = int(conf["max_iterations"])
     if parsedArgs.cmd is not None:
         parsedArgs.func(parsedArgs, configuration)
         exit()
@@ -101,7 +105,14 @@ if __name__ == "__main__":
     simulation_output = []
     with multiprocessing.Pool(processes=multiprocessing.cpu_count() * 2 - 1) as p:
         iterThis = itertools.repeat(
-            (num_nodes, num_initial_agents, structure_name, transmittion_prob, max_iters), simulation_iters
+            (
+                num_nodes,
+                num_initial_agents,
+                structure_name,
+                transmittion_prob,
+                max_iters,
+            ),
+            simulation_iters,
         )
         with tqdm.tqdm(total=simulation_iters) as pbar:
             for _ in p.imap_unordered(simulate_saturation, iterThis):
@@ -128,11 +139,11 @@ if __name__ == "__main__":
         "num_nodes": num_nodes,
     }
     plot_reachability(
-            saturation_fraction_mean= saturation_timestep,
-            saturation_fraction_std= saturation_timestep_std,
-            graph_type= structure_name,
-            save_filename= True
-            )
+        saturation_fraction_mean=saturation_timestep,
+        saturation_fraction_std=saturation_timestep_std,
+        graph_type=structure_name,
+        save_filename=True,
+    )
 
     import pandas as pd
 
@@ -143,4 +154,4 @@ if __name__ == "__main__":
         df.to_csv(
             os.path.join(parsedArgs.csv_dir, f"{num_initial_agents}.csv")
             # f"/home/cm2435/Desktop/university_final_year_cw/data/stats/{num_initial_agents}.csv"
-        )/home/cm2435/Desktop/graph_transmittion_research_project/data/figures
+        ) / home / cm2435 / Desktop / graph_transmittion_research_project / data / figures
