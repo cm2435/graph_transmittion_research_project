@@ -13,7 +13,8 @@ reachability:
   num_simulation_runs : 5
   random_geometric:
     nodes : 500 
-    graph_edge_radii : [0.025, 0.05, ]
+    graph_edge_radii : [0.025, 0.05]
+
 
   barabasi_albert:
     nodes : 500 

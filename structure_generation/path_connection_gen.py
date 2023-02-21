@@ -292,6 +292,7 @@ class ProceduralGraphGenerator(object):
         info_dict = {
             "average_degree" : average_degree,
             "num_nodes" : len(current_infection_arr),
+            "modality" : modality
         }
         info_dict.update(self._generate_network_statistics(giant_graph))
         return infection_matrix_list, timesteps_to_full_saturation, fraction_infected, info_dict 
