@@ -146,6 +146,14 @@ class ProceduralGraphGenerator(object):
         return giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
 
     @staticmethod
+    def _find_network_closeness_centralities(
+        graph : Union[np.ndarray, nx.classes.graph.Graph]
+    ) -> dict:
+        if isinstance(graph, np.ndarray):
+            graph = nx.from_numpy_array(graph)
+        return nx.closeness_centrality(graph)
+    
+    @staticmethod
     def _generate_network_statistics(
         graph: Union[np.ndarray, nx.classes.graph.Graph]
     ) -> dict:
@@ -174,6 +182,7 @@ class ProceduralGraphGenerator(object):
         """
         initial_graph = np.zeros((self.num_nodes, self.num_nodes))
         edges = np.dstack(np.where(giant_graph == 1))[0]
+        
         random_edge_x, random_edge_y = edges[random.randint(0, len(edges) - 1)]
         (
             initial_graph[random_edge_x][random_edge_y],
@@ -206,20 +215,25 @@ class ProceduralGraphGenerator(object):
         np.fill_diagonal(final_matrix, 0)
         return final_matrix
 
-    def _make_infection_array(self, largest_subcomponent: np.ndarray) -> np.ndarray:
+    def _make_infection_array(self, largest_subcomponent: np.ndarray, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
         with num_agents number of initial infections with the agents in the largest
         """
-        infected_nodes = []
-        nodepair_list = np.dstack(np.where(largest_subcomponent == 1))[0]
         infection_arr = np.zeros(largest_subcomponent.shape[0])
         fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
 
-        while len(infected_nodes) < self.num_agents:
-            infection_node = nodepair_list[random.randint(0, len(nodepair_list) - 1)][1]
-            infected_nodes.append(infection_node)
-            infection_arr[infection_node] = 1
+        #Compute the closeness centrality of all nodes in network, reorder closeness dict by closest to desired_agent_closeness_centrality and chose first N
+        node_closeness_centralities = self._find_network_closeness_centralities(largest_subcomponent)
+        reordered_list = [list(node_closeness_centralities.keys())[idx] \
+            for idx in np.argsort(
+                np.absolute(np.array(list(node_closeness_centralities.values()))-desired_agent_closeness_centrality))
+        ]
+        reordered_list.reverse()
+        node_closeness_centralities = {k: node_closeness_centralities[k]+desired_agent_closeness_centrality for k in reordered_list}
+        infection_nodes = list(node_closeness_centralities.keys())[:self.num_agents]
+        for node in infection_nodes: 
+            infection_arr[node] = 1
 
         return infection_arr, fully_saturated_arr
 
