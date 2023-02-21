@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
             x = ProceduralGraphGenerator(graph)
             infection_matrix_list, timesteps_saturation, fraction_infected_list, average_degree = x.infect_till_saturation(
-                modality="saturation", verbose= False
+                modality="irreversable", verbose= False
             )
             timesteps = [x for x in range(timesteps_saturation)]
             try: 

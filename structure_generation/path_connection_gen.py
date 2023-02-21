@@ -56,17 +56,17 @@ class GraphStructureMutator(object):
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
         generated_edge_lifespan: int = 100 ,
-        modality: str = "saturation",
+        modality: str = "irreversable",
     ) -> np.ndarray:
         """
         sampling graph : graph to sample new edges from (largest component of structure)
         updating graph : graph to add new randomly chosen edges to
         """
         assert modality in [
-            "saturation",
-            "causal",
-        ], f"Invalid structure modality passed : {modality}. Allowed types are saturation, causal"
-        if modality == "saturation":
+            "irreversable",
+            "reversable",
+        ], f"Invalid structure modality passed : {modality}. Allowed types are irreversable, reversable"
+        if modality == "irreversable":
             generated_edge_lifespan = 2147483647
 
         nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
@@ -218,7 +218,7 @@ class ProceduralGraphGenerator(object):
         self,
         infection_probability: float = 1,
         max_iters: int = 2000,
-        modality: str = "saturation",
+        modality: str = "irreversable",
         verbose : bool = True
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
