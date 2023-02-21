@@ -29,26 +29,6 @@ class GraphGenerator(abc.ABC):
         except:
             assert False
 
-
-class DebugStatic(GraphGenerator):
-    name = "debug_static"
-
-    def generate_adj_matrix(self):
-        debug_graph = np.zeros((self.num_nodes, self.num_nodes))
-        debug_graph[1, 2] = 1
-        return debug_graph
-
-
-class CycleGraph(GraphGenerator):
-    name = "cycle_generator"
-
-    def generate_adj_matrix(self):
-        import networkx as nx
-
-        graph = nx.cycle_graph(self.num_nodes)
-        return nx.to_numpy_array(graph)
-
-
 class BarabasiAlbert(GraphGenerator):
     """ """
 
@@ -90,44 +70,6 @@ class ConfigurationGraph(GraphGenerator):
         sequence = nx.random_powerlaw_tree_sequence(self.num_nodes, tries=50000)
         graph = nx.configuration_model(sequence)
         return nx.to_numpy_array(graph)
-
-
-class RandomSparse(GraphGenerator):
-    """ """
-
-    name = "random_sparse"
-
-    def __init__(self, structure_name: str = "random_sparse", num_nodes: int = 50):
-        super().__init__(structure_name=structure_name, num_nodes=num_nodes)
-        self.initial_adj_matrix = self.generate_adj_matrix()
-
-    def generate_adj_matrix(self, num_edges: int = 5) -> np.ndarray:
-        """
-        Generate a random num_node by num_node adjacency matrix that is seeded with
-        num_timestep_edges connections in an otherwise sparse graph.
-        """
-        uninfected_graph = np.zeros((self.num_nodes, self.num_nodes))
-        for _ in range(num_edges):
-            random_i, random_j = random.randint(0, self.num_nodes - 1), random.randint(
-                0, self.num_nodes - 1
-            )
-            uninfected_graph[random_i][random_j] = 1
-            uninfected_graph[random_j][random_i] = 1
-
-        return uninfected_graph
-
-
-class FullyConnected(GraphGenerator):
-    """ """
-
-    name = "fully_connected"
-
-    def __init__(self, structure_name: str = "fully_connected", num_nodes: int = 50):
-        super().__init__(structure_name=structure_name, num_nodes=num_nodes)
-        self.initial_adj_matrix = self.generate_adj_matrix()
-
-    def generate_adj_matrix(self) -> np.ndarray:
-        return nx.to_numpy_array(nx.complete_graph(self.num_nodes))
 
 
 class RandomGeometric(GraphGenerator):
