@@ -111,7 +111,7 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 500, num_agents: int = 1
+        self, initial_structure: np.ndarray, num_nodes: int = 1000, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -240,7 +240,7 @@ class ProceduralGraphGenerator(object):
     def infect_till_saturation(
         self,
         infection_probability: float = 1,
-        max_iters: int = 2000,
+        max_iters: int = 15000,
         modality: str = "irreversable",
         verbose: bool = True,
     ) -> Tuple[List[np.ndarray], int, List[float]]:
