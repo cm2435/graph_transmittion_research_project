@@ -111,7 +111,7 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: np.ndarray, num_nodes: int = 1000, num_agents: int = 1
+        self, initial_structure: str, num_nodes: int = 1000, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
@@ -169,6 +169,8 @@ class ProceduralGraphGenerator(object):
 
         return info_dict
 
+    @staticmethod
+    
     def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
         """
         Method to generate the initial graph structure by adding a random edge to the `giant_graph`.
@@ -215,6 +217,7 @@ class ProceduralGraphGenerator(object):
         np.fill_diagonal(final_matrix, 0)
         return final_matrix
 
+    
     def _make_infection_array(self, largest_subcomponent: np.ndarray, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it

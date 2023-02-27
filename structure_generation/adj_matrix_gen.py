@@ -127,6 +127,7 @@ class RandomGeometric(GraphGenerator):
         self.initial_adj_matrix = nx.to_numpy_array(self.generate_calibrated_graph())
 
     def generate_graph(self, graph_edge_radius : float = 0.5) -> np.ndarray:
+        
         return nx.random_geometric_graph(
             self.num_nodes, graph_edge_radius
         )
