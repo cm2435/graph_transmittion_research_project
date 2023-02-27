@@ -178,8 +178,6 @@ class ProceduralGraphGenerator(object):
 
         return info_dict
 
-    @staticmethod
-    
     def _make_initial_structure(self, giant_graph: np.ndarray) -> np.ndarray:
         """
         Method to generate the initial graph structure by adding a random edge to the `giant_graph`.
@@ -227,7 +225,7 @@ class ProceduralGraphGenerator(object):
         return final_matrix
 
     
-    def _make_infection_array(self, largest_subcomponent: np.ndarray, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
+    def _make_infection_array(self, largest_subcomponent: np.ndarray, structure_type : str, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
         with num_agents number of initial infections with the agents in the largest
@@ -236,7 +234,7 @@ class ProceduralGraphGenerator(object):
         fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
 
         #Compute the closeness centrality of all nodes in network, reorder closeness dict by closest to desired_agent_closeness_centrality and chose first N
-        if self.structure_mutator.initial_structure == "random_geometric":
+        if structure_type == "random_geometric":
             node_closeness_centralities = self._find_network_closeness_centralities(largest_subcomponent)
             reordered_list = [list(node_closeness_centralities.keys())[idx] \
                 for idx in np.argsort(
@@ -247,7 +245,7 @@ class ProceduralGraphGenerator(object):
             infection_nodes = list(node_closeness_centralities.keys())[:self.num_agents]
         
         #Find position of all nodes in network, find the closest to the 'centre', seed the initial agents as those closest to 0,0
-        elif self.structure_mutator.initial_structure == "barabasi_albert":
+        elif structure_type == "barabasi_albert":
             node_positions = self._find_network_node_positions(largest_subcomponent)
             distances = []
             for n in node_positions:
@@ -262,6 +260,7 @@ class ProceduralGraphGenerator(object):
 
     def infect_till_saturation(
         self,
+        structure_name : str, 
         infection_probability: float = 1,
         max_iters: int = 15000,
         modality: str = "irreversable",
@@ -297,8 +296,8 @@ class ProceduralGraphGenerator(object):
         giant_graph, average_degree = self._find_giant_structure(
             self.initial_structure, verbose=verbose
         )
-        infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph)
-        initial_graph = self._make_initial_structure(giant_graph)
+        infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph, structure_name)
+        initial_graph = self._make_initial_structure(giant_graph = giant_graph)
 
         infection_arr_list = [infection_arr]
         while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
