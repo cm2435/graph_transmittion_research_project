@@ -143,8 +143,8 @@ class ProceduralGraphGenerator(object):
             print(
                 f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}"""
             )
-
-        return nx_giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
+        degree_list = [val for (node, val) in nx_giant_graph.degree()]
+        return nx_giant_graph, np.average(degree_list), degree_list
 
     @staticmethod
     def _find_network_closeness_centralities(
@@ -292,7 +292,7 @@ class ProceduralGraphGenerator(object):
             pbar = tqdm.tqdm(total=max_iters)
         # Generate the giant graph as our initial structure from our 'choosing' structure
         # Generate the infected nodes list and the initial infection graph structure.
-        giant_graph, average_degree = self._find_giant_structure(
+        giant_graph, average_degree, degree_list = self._find_giant_structure(
             self.initial_graph, verbose=verbose
         )
         infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph, structure_name)
@@ -340,6 +340,7 @@ class ProceduralGraphGenerator(object):
             "average_degree": average_degree,
             "num_nodes": len(current_infection_arr),
             "modality": modality,
+            "degree_list" : degree_list
         }
         info_dict.update(self._generate_network_statistics(giant_graph))
         return (
