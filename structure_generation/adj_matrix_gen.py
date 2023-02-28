@@ -68,7 +68,7 @@ class BarabasiAlbert(GraphGenerator):
         self.target_mean_degree = target_mean_degree
         
         self.optim_metric = "target_mean_degree" if target_mean_degree is not None else "target_mean_pathlength"
-        self.initial_adj_matrix = nx.to_numpy_array(self.generate_calibrated_graph())
+        self.initial_graph = self.generate_calibrated_graph()
 
     def generate_graph(self, num_attachment_nodes : int = 10):
         graph = nx.barabasi_albert_graph(
@@ -98,13 +98,7 @@ class BarabasiAlbert(GraphGenerator):
                     return graph
             return graph 
     
-    def generate_adj_matrix(self) -> np.ndarray:
-        if isinstance(self.node_degree, tuple):
-            self.node_degree = self.node_degree[0]
-        graph = nx.barabasi_albert_graph(
-            self.num_nodes, self.node_degree if self.node_degree is not None else 3
-        )
-        return nx.to_numpy_array(graph)
+
 
 class RandomGeometric(GraphGenerator):
     """ """
@@ -124,7 +118,7 @@ class RandomGeometric(GraphGenerator):
         self.target_mean_degree = target_mean_degree
 
         self.optim_metric = "target_mean_degree" if target_mean_degree is not None else "target_mean_pathlength"
-        self.initial_adj_matrix = nx.to_numpy_array(self.generate_calibrated_graph())
+        self.initial_graph = self.generate_calibrated_graph()
 
     def generate_graph(self, graph_edge_radius : float = 0.5) -> np.ndarray:
         
@@ -194,7 +188,7 @@ class GraphStructureGenerator(object):
         assert self.target_mean_degree is not None or self.average_path_length is not None,\
             f"to set internal graph parameters, a (single) metric from [target_mean_degree, average_path_length] should be supplied. {kwargs} was passed"
     
-        self.initial_adj_matrix = self.get_graph_structure().initial_adj_matrix
+        self.initial_graph = self.get_graph_structure().initial_graph
 
     def get_graph_structure(self) -> np.ndarray:
         """ """

@@ -111,13 +111,13 @@ class ProceduralGraphGenerator(object):
     """
 
     def __init__(
-        self, initial_structure: str, num_nodes: int = 1000, num_agents: int = 1
+        self, initial_graph, num_nodes: int = 1000, num_agents: int = 1
     ):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
-        self.initial_structure = initial_structure
+        self.initial_graph = initial_graph
         self.structure_mutator = GraphStructureMutator(
-            initial_structure=initial_structure
+            initial_structure=initial_graph
         )
 
     @staticmethod
@@ -135,15 +135,16 @@ class ProceduralGraphGenerator(object):
             np.ndarray: 2D array representing the adjacency matrix of the giant graph.
 
         """
-        graph = nx.from_numpy_array(graph_structure)
-        nx_giant_graph = graph.subgraph(max(nx.connected_components(graph), key=len))
+        if isinstance(graph_structure, np.ndarray): 
+            graph_structure = nx.from_numpy_array(graph_structure)
+
+        nx_giant_graph = graph_structure.subgraph(max(nx.connected_components(graph_structure), key=len))
         if verbose:
             print(
                 f"""graph structure properties : {nx_giant_graph} average degree {np.average([val for (node, val) in nx_giant_graph.degree()])}"""
             )
-        giant_graph = nx.to_numpy_array(nx_giant_graph)
 
-        return giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
+        return nx_giant_graph, np.average([val for (node, val) in nx_giant_graph.degree()])
 
     @staticmethod
     def _find_network_closeness_centralities(
@@ -155,11 +156,8 @@ class ProceduralGraphGenerator(object):
     
     @staticmethod
     def _find_network_node_positions(
-        graph : Union[np.ndarray, nx.classes.graph.Graph]
+        graph
     ) -> dict:
-        if isinstance(graph, np.ndarray):
-            graph = nx.from_numpy_array(graph)
-        
         return nx.get_node_attributes(graph, "pos")
     
     @staticmethod
@@ -225,16 +223,17 @@ class ProceduralGraphGenerator(object):
         return final_matrix
 
     
-    def _make_infection_array(self, largest_subcomponent: np.ndarray, structure_type : str, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
+    def _make_infection_array(self, largest_subcomponent, structure_type : str, desired_agent_closeness_centrality : int = 5) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
         with num_agents number of initial infections with the agents in the largest
         """
-        infection_arr = np.zeros(largest_subcomponent.shape[0])
-        fully_saturated_arr = np.ones(largest_subcomponent.shape[0])
+        subcomponent_adj_matrix = nx.to_numpy_array(largest_subcomponent)
+        infection_arr = np.zeros(subcomponent_adj_matrix.shape[0])
+        fully_saturated_arr = np.ones(subcomponent_adj_matrix.shape[0])
 
         #Compute the closeness centrality of all nodes in network, reorder closeness dict by closest to desired_agent_closeness_centrality and chose first N
-        if structure_type == "random_geometric":
+        if structure_type == "barabasi_albert":
             node_closeness_centralities = self._find_network_closeness_centralities(largest_subcomponent)
             reordered_list = [list(node_closeness_centralities.keys())[idx] \
                 for idx in np.argsort(
@@ -243,9 +242,9 @@ class ProceduralGraphGenerator(object):
             reordered_list.reverse()
             node_closeness_centralities = {k: node_closeness_centralities[k]+desired_agent_closeness_centrality for k in reordered_list}
             infection_nodes = list(node_closeness_centralities.keys())[:self.num_agents]
-        
+
         #Find position of all nodes in network, find the closest to the 'centre', seed the initial agents as those closest to 0,0
-        elif structure_type == "barabasi_albert":
+        elif structure_type == "random_geometric":
             node_positions = self._find_network_node_positions(largest_subcomponent)
             distances = []
             for n in node_positions:
@@ -294,11 +293,12 @@ class ProceduralGraphGenerator(object):
         # Generate the giant graph as our initial structure from our 'choosing' structure
         # Generate the infected nodes list and the initial infection graph structure.
         giant_graph, average_degree = self._find_giant_structure(
-            self.initial_structure, verbose=verbose
+            self.initial_graph, verbose=verbose
         )
         infection_arr, fully_saturated_arr = self._make_infection_array(giant_graph, structure_name)
-        initial_graph = self._make_initial_structure(giant_graph = giant_graph)
+        initial_graph = self._make_initial_structure(giant_graph = nx.to_numpy_array(giant_graph))
 
+        giant_graph = nx.to_numpy_array(giant_graph)
         infection_arr_list = [infection_arr]
         while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
             # Update timesteps and take current infection array
