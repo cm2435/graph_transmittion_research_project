@@ -249,7 +249,7 @@ class ProceduralGraphGenerator(object):
             distances = []
             for n in node_positions:
                 x, y = node_positions[n]
-                distances.append((x - 0.0) ** 2 + (y - 0.0) ** 2)
+                distances.append((x - 0.5) ** 2 + (y - 0.5) ** 2)
             infection_nodes = np.argsort(distances).tolist()[:self.num_agents]
 
         for node in infection_nodes: 
