@@ -343,6 +343,7 @@ class ProceduralGraphGenerator(object):
             "degree_list" : degree_list
         }
         info_dict.update(self._generate_network_statistics(giant_graph))
+        
         return (
             infection_matrix_list,
             timesteps_to_full_saturation,
