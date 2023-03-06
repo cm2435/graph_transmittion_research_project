@@ -350,3 +350,4 @@ class ProceduralGraphGenerator(object):
             fraction_infected,
             info_dict,
         )
+

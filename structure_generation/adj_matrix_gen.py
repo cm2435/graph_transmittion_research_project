@@ -78,7 +78,7 @@ class BarabasiAlbert(GraphGenerator):
     
     def generate_calibrated_graph(self, 
         update_val : int = 15,
-        max_iters : int = 25, 
+        max_iters : int = 15, 
         accepted_precision_percentage : float =  0.0005,
         connecting_edges : float = 20,
     ): 
@@ -128,7 +128,7 @@ class RandomGeometric(GraphGenerator):
         
     def generate_calibrated_graph(self, 
         update_val : int = 5,
-        max_iters : int = 50, 
+        max_iters : int = 15, 
         accepted_precision_percentage : float =  0.00025,
         graph_radius : float = 10,
     ): 
