@@ -56,7 +56,7 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 100,
+        generated_edge_lifespan: int = 5,
         modality: str = "irreversable",
     ) -> np.ndarray:
         """
@@ -119,6 +119,7 @@ class ProceduralGraphGenerator(object):
         self.structure_mutator = GraphStructureMutator(
             initial_structure=initial_graph
         )
+        random.seed(1234)
 
     @staticmethod
     def _find_giant_structure(
@@ -350,4 +351,6 @@ class ProceduralGraphGenerator(object):
             fraction_infected,
             info_dict,
         )
+
+
 

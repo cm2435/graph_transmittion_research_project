@@ -3,7 +3,7 @@ import random
 import abc
 import networkx as nx
 from typing import Type
-
+import copy
 
 class GraphGenerator(abc.ABC):
     """ """
@@ -33,6 +33,10 @@ class GraphGenerator(abc.ABC):
     def _find_mean_degree(graph : nx.classes.graph.Graph):
         return np.average([val for (node, val) in graph.degree()])
     
+    @staticmethod
+    def _find_size_giant_component(graph : nx.classes.graph.Graph):
+        giant_component = graph.subgraph(max(nx.connected_components(graph), key=len))
+        return giant_component.number_of_nodes()
 
 class ConfigurationGraph(GraphGenerator):
     """ """
@@ -120,33 +124,55 @@ class RandomGeometric(GraphGenerator):
         self.optim_metric = "target_mean_degree" if target_mean_degree is not None else "target_mean_pathlength"
         self.initial_graph = self.generate_calibrated_graph()
 
-    def generate_graph(self, graph_edge_radius : float = 0.5) -> np.ndarray:
-        
+    def generate_graph(self, graph_edge_radius : float = 0.5, num_nodes : int = None) -> np.ndarray:
+        nodes = self.num_nodes if num_nodes is None else num_nodes
+        pos = {i: (random.uniform(0, 1), random.uniform(0, 1)) for i in range(nodes)}
+
         return nx.random_geometric_graph(
-            self.num_nodes, graph_edge_radius
+            nodes, graph_edge_radius, pos=pos
         )
+        
         
     def generate_calibrated_graph(self, 
         update_val : int = 5,
-        max_iters : int = 15, 
+        update_val_nodes : int = 100,
+        max_iters : int = 30, 
         accepted_precision_percentage : float =  0.00025,
+        accepted_precision_percentage_num_nodes : float =  0.005,
+
         graph_radius : float = 10,
     ): 
-        #This is slow and I would like to optimise it 
+        #Optimise for the mean degree close to the correct value
         if self.optim_metric == "target_mean_degree":
             graph = self.generate_graph(graph_radius)
             for i in range(max_iters): 
                 graph = self.generate_graph(np.absolute(graph_radius))
                 graph_mean_degree = self._find_mean_degree(graph)
                 if np.absolute(self.target_mean_degree - graph_mean_degree) < accepted_precision_percentage * self.num_nodes: 
-                    return graph
+                    break
                 
                 update_val = update_val/1.5
                 if graph_mean_degree < self.target_mean_degree:
                     graph_radius += update_val
                 elif graph_mean_degree > self.target_mean_degree:
                     graph_radius -= update_val
-            return graph 
+
+            node_num = self.num_nodes
+            for i in range(max_iters):
+                graph = self.generate_graph(np.absolute(graph_radius), num_nodes= int(node_num))
+                size_giant_component = self._find_size_giant_component(graph)
+                if np.absolute(self.num_nodes - size_giant_component) < accepted_precision_percentage_num_nodes * self.num_nodes: 
+
+                    return graph
+
+                update_val_nodes = update_val_nodes/1.3
+                if size_giant_component <= self.num_nodes:
+                    node_num += update_val_nodes
+                
+                elif size_giant_component > self.num_nodes:
+                    node_num -= update_val_nodes
+
+        return graph 
 
 class SparseErdos(GraphGenerator):
     """ """
@@ -208,5 +234,5 @@ class GraphStructureGenerator(object):
 
 if __name__ == "__main__":
     #x = GraphStructureGenerator(structure_name="random_sparse", num_nodes=50, node_degree = 50)
-    x = GraphStructureGenerator(structure_name = "barabasi_albert", num_nodes= 5000, target_mean_degree = 10)
-    print(nx.from_numpy_array(x.initial_adj_matrix))
+    x = GraphStructureGenerator(structure_name = "random_geometric", num_nodes= 500, target_mean_degree = 5)
+    print(x.initial_graph)
