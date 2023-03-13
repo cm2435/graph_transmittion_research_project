@@ -145,8 +145,8 @@ class RandomGeometric(GraphGenerator):
     def generate_calibrated_graph(
         self,
         update_val: int = 5,
-        update_val_nodes: int = 100,
-        max_iters: int = 30,
+        update_val_nodes: int = 150,
+        max_iters: int = 40,
         accepted_precision_percentage: float = 0.00025,
         accepted_precision_percentage_num_nodes: float = 0.005,
         graph_radius: float = 10,
@@ -169,6 +169,7 @@ class RandomGeometric(GraphGenerator):
                 elif graph_mean_degree > self.target_mean_degree:
                     graph_radius -= update_val
 
+            #Optimise to get the value for the number of nodes in the giant component as close as possible to self.num_nodes
             node_num = self.num_nodes
             for i in range(max_iters):
                 graph = self.generate_graph(
@@ -180,7 +181,7 @@ class RandomGeometric(GraphGenerator):
                     < accepted_precision_percentage_num_nodes * self.num_nodes
                 ):
 
-                    return graph
+                    break
 
                 update_val_nodes = update_val_nodes / 1.3
                 if size_giant_component <= self.num_nodes:
@@ -252,6 +253,6 @@ class GraphStructureGenerator(object):
 if __name__ == "__main__":
     # x = GraphStructureGenerator(structure_name="random_sparse", num_nodes=50, node_degree = 50)
     x = GraphStructureGenerator(
-        structure_name="random_geometric", num_nodes=500, target_mean_degree=5
+        structure_name="random_geometric", num_nodes=750, target_mean_degree=5
     )
     print(x.initial_graph)

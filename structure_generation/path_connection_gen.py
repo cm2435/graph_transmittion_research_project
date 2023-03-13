@@ -5,7 +5,7 @@ import tqdm
 from typing import List, Tuple, Optional, Union
 import networkx as nx
 from scipy.stats import kstest, chisquare
-
+import gc
 
 class StatsUtils(object):
     """ """
@@ -151,7 +151,8 @@ class ProceduralGraphGenerator(object):
     ) -> dict:
         if isinstance(graph, np.ndarray):
             graph = nx.from_numpy_array(graph)
-        return nx.closeness_centrality(graph)
+        return graph.degree()
+
 
     @staticmethod
     def _find_network_node_positions(graph) -> dict:
@@ -223,7 +224,7 @@ class ProceduralGraphGenerator(object):
         self,
         largest_subcomponent,
         structure_type: str,
-        desired_agent_closeness_centrality: int = 5,
+        desired_agent_degree: int = 5,
     ) -> np.ndarray:
         """
         Generates a 1D array of the length of the number of nodes and seeds it
@@ -233,26 +234,26 @@ class ProceduralGraphGenerator(object):
         infection_arr = np.zeros(subcomponent_adj_matrix.shape[0])
         fully_saturated_arr = np.ones(subcomponent_adj_matrix.shape[0])
 
-        # Compute the closeness centrality of all nodes in network, reorder closeness dict by closest to desired_agent_closeness_centrality and chose first N
+        # Compute the degree of all nodes in network, reorder closeness dict by closest to desired_agent_closeness_centrality and chose first N
         if structure_type == "barabasi_albert":
-            node_closeness_centralities = self._find_network_closeness_centralities(
+            node_degree = self._find_network_closeness_centralities(
                 largest_subcomponent
             )
             reordered_list = [
-                list(node_closeness_centralities.keys())[idx]
+                list(node_degree.keys())[idx]
                 for idx in np.argsort(
                     np.absolute(
-                        np.array(list(node_closeness_centralities.values()))
-                        - desired_agent_closeness_centrality
+                        np.array(list(node_degree.values()))
+                        - desired_agent_degree
                     )
                 )
             ]
             reordered_list.reverse()
-            node_closeness_centralities = {
-                k: node_closeness_centralities[k] + desired_agent_closeness_centrality
+            node_degree = {
+                k: node_degree[k] + desired_agent_degree
                 for k in reordered_list
             }
-            infection_nodes = list(node_closeness_centralities.keys())[
+            infection_nodes = list(node_degree.keys())[
                 : self.num_agents
             ]
 
@@ -276,6 +277,8 @@ class ProceduralGraphGenerator(object):
         infection_probability: float = 1,
         max_iters: int = 15000,
         modality: str = "irreversable",
+        sample_giant : bool = True,
+        store_infectivity_list : bool = True,
         verbose: bool = True,
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
@@ -318,15 +321,22 @@ class ProceduralGraphGenerator(object):
         giant_graph = nx.to_numpy_array(giant_graph)
         infection_arr_list = [infection_arr]
         while np.array_equal(infection_arr_list[-1], fully_saturated_arr) is False:
-            # Update timesteps and take current infection array
+            if verbose:
+                pbar.update(1)
+            if timesteps_to_full_saturation == max_iters:
+                break            # Update timesteps and take current infection array
             timesteps_to_full_saturation += 1
             current_infection_arr = infection_arr_list[-1]
             # Update the graph structure to infect a new node
-            graph_structure = self.structure_mutator._next_structure(
-                sampling_graph=giant_graph,
-                updating_graph=initial_graph,
-                modality=modality,
-            )
+            if sample_giant: 
+                graph_structure = self.structure_mutator._next_structure(
+                    sampling_graph=giant_graph,
+                    updating_graph=initial_graph,
+                    modality=modality,
+                )
+            else: 
+                graph_structure = giant_graph
+
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
             for pair in nodepair_list:
                 if (
@@ -342,17 +352,13 @@ class ProceduralGraphGenerator(object):
                             current_infection_arr[pair[0]],
                             current_infection_arr[pair[1]],
                         ) = (1, 1)
-
+            
+        if store_infectivity_list:
             infection_matrix_list.append(current_infection_arr)
-            fraction_infected.append(
-                np.count_nonzero(current_infection_arr == 1)
-                / len(current_infection_arr)
-            )
-            if verbose:
-                pbar.update(1)
-            if timesteps_to_full_saturation == max_iters:
-                break
-
+        fraction_infected.append(
+            np.count_nonzero(current_infection_arr == 1)
+            / len(current_infection_arr)
+        )
         info_dict = {
             "average_degree": average_degree,
             "num_nodes": len(current_infection_arr),
@@ -367,3 +373,17 @@ class ProceduralGraphGenerator(object):
             fraction_infected,
             info_dict,
         )
+
+
+if __name__ == "__main__":
+    graphgen = GraphStructureGenerator(
+        structure_name="random_geometric", 
+        num_nodes=500, 
+        target_mean_degree = 5
+    )
+    graph = graphgen.initial_graph  
+
+    x = ProceduralGraphGenerator(graph)
+    q = x.infect_till_saturation("random_geometric", sample_giant= True, infection_probability=0.01, store_infectivity_list = False)
+    print(q[-1])
+    print(q[2])
