@@ -1,4 +1,4 @@
-from .adj_matrix_gen import GraphStructureGenerator
+from adj_matrix_gen import GraphStructureGenerator
 import numpy as np
 import random
 import tqdm
@@ -312,13 +312,13 @@ class ProceduralGraphGenerator(object):
             timesteps_to_full_saturation += 1
             current_infection_arr = infection_arr_list[-1]
             # Update the graph structure to infect a new node
-            if sample_giant: 
+            if sample_giant:
                 graph_structure = self.structure_mutator._next_structure(
                     sampling_graph=giant_graph,
                     updating_graph=initial_graph,
                     modality=modality,
                 )
-            else: 
+            else:
                 graph_structure = giant_graph
 
             nodepair_list = np.dstack(np.where(graph_structure == 1))[0]
@@ -336,7 +336,7 @@ class ProceduralGraphGenerator(object):
                             current_infection_arr[pair[0]],
                             current_infection_arr[pair[1]],
                         ) = (1, 1)
-            
+
             if store_infectivity_list:
                 infection_matrix_list.append(current_infection_arr)
             fraction_infected.append(
@@ -361,11 +361,11 @@ class ProceduralGraphGenerator(object):
 
 if __name__ == "__main__":
     graphgen = GraphStructureGenerator(
-        structure_name="barabasi_albert", 
-        num_nodes=500, 
+        structure_name="barabasi_albert",
+        num_nodes=500,
         target_mean_degree = 5
     )
-    graph = graphgen.initial_graph  
+    graph = graphgen.initial_graph
 
     x = ProceduralGraphGenerator(graph)
     q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False)
