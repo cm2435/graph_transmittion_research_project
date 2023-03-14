@@ -1,4 +1,4 @@
-from .adj_matrix_gen import GraphStructureGenerator
+from adj_matrix_gen import GraphStructureGenerator
 import numpy as np
 import random
 import tqdm
@@ -29,8 +29,9 @@ class GraphStructureMutator(object):
             after a given time. of shape [(adj_matrix_x_cord, adj_matrix_y_cord, timesteps_left_to_live)...]
     """
 
-    def __init__(self, initial_structure: np.ndarray):
+    def __init__(self, initial_structure: np.ndarray, num_nodes : int):
         self.initial_structure: str = initial_structure
+        self.num_nodes = num_nodes
         self.edge_structure: List[Tuple[int, int, int]] = []
 
     def _remove_stale_edges(
@@ -75,13 +76,16 @@ class GraphStructureMutator(object):
             nodepair_x, nodepair_y = nodepair_list[
                 random.randint(0, len(nodepair_list) - 1)
             ]
-            (
-                updating_graph[nodepair_x][nodepair_y],
-                updating_graph[nodepair_y][[nodepair_x]],
-            ) = (1, 1)
-            self.edge_structure.append(
-                (nodepair_x, nodepair_y, generated_edge_lifespan)
-            )
+            if nodepair_x < self.num_nodes and nodepair_y < self.num_nodes:
+                (
+                    updating_graph[nodepair_x][nodepair_y],
+                    updating_graph[nodepair_y][[nodepair_x]],
+                ) = (1, 1)
+                self.edge_structure.append(
+                    (nodepair_x, nodepair_y, generated_edge_lifespan)
+                )
+            else:
+                print("collision", nodepair_x, nodepair_y)
         updating_graph = self._remove_stale_edges(updating_adj_matrix=updating_graph)
 
         return updating_graph
@@ -110,11 +114,11 @@ class ProceduralGraphGenerator(object):
             Instance of GraphStructureMutator with the `initial_structure` as the initial structure.
     """
 
-    def __init__(self, initial_graph, num_nodes: int = 1000, num_agents: int = 1):
+    def __init__(self, initial_graph, num_nodes: int = 500, num_agents: int = 1):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.initial_graph = initial_graph
-        self.structure_mutator = GraphStructureMutator(initial_structure=initial_graph)
+        self.structure_mutator = GraphStructureMutator(initial_structure=initial_graph, num_nodes = num_nodes)
         random.seed(1234)
 
     @staticmethod
@@ -216,7 +220,6 @@ class ProceduralGraphGenerator(object):
 
         final_matrix = np.vstack(reachability_arrays)
         final_matrix[final_matrix == 0] = np.inf
-
         np.fill_diagonal(final_matrix, 0)
         return final_matrix
 
@@ -336,38 +339,43 @@ class ProceduralGraphGenerator(object):
                             current_infection_arr[pair[0]],
                             current_infection_arr[pair[1]],
                         ) = (1, 1)
-            
+    
             if store_infectivity_list:
                 infection_matrix_list.append(current_infection_arr)
             fraction_infected.append(
                 np.count_nonzero(current_infection_arr == 1)
                 / len(current_infection_arr)
             )
-            info_dict = {
-                "average_degree": average_degree,
-                "num_nodes": len(current_infection_arr),
-                "modality": modality,
-                "degree_list": degree_list,
-            }
-            info_dict.update(self._generate_network_statistics(giant_graph))
-
+        info_dict = {
+            "average_degree": average_degree,
+            "num_nodes": len(current_infection_arr),
+            "modality": modality,
+            "degree_list" : degree_list
+        }
+        info_dict.update(self._generate_network_statistics(giant_graph))
+        
         return (
             infection_matrix_list,
             timesteps_to_full_saturation,
             fraction_infected,
             info_dict,
         )
+    
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt 
+
     graphgen = GraphStructureGenerator(
         structure_name="barabasi_albert", 
-        num_nodes=500, 
+        num_nodes=750, 
         target_mean_degree = 5
     )
     graph = graphgen.initial_graph  
 
-    x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False)
-    print(q[-1])
-    print(q[2])
+    x = ProceduralGraphGenerator(graph, graph.number_of_nodes())
+    for i in tqdm.tqdm(range(10)):
+        q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.005, store_infectivity_list = False)
+        plt.plot([x for x in range(len(q[2]))], q[2])
+
+    plt.show()
