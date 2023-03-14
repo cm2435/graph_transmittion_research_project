@@ -344,17 +344,30 @@ class ProceduralGraphGenerator(object):
                 infection_matrix_list.append(current_infection_arr)
             if return_components:
                 # nice and slow
-                comps = list(nx.connected_components(nx.from_numpy_array(graph_structure)))
+                internalgraph = nx.from_numpy_array(graph_structure)
+                #nx.draw(internalgraph)
+                import matplotlib.pyplot as plt
+                #plt.show()
+                #exit()
+                comps = list(nx.connected_components(internalgraph))
                 on = []
                 off = []
+                print(f"{len(comps)} components")
                 for c in comps:
                     c = list(c)
-                    if all(map(lambda x: current_infection_arr[x], c)):
-                        on.append(c)
-                    elif not any(map(lambda x: current_infection_arr[x], c)):
-                        off.append(c)
-                largest_active_component.append(len(max(on, key=len)) / self.num_nodes if len(on) else 0.0)
-                largest_inactive_component.append(len(max(off, key=len)) / self.num_nodes if len(off) else 0.0)
+                    #print(len(c))
+                    res = list(map(lambda x: current_infection_arr[x] if x < len(current_infection_arr) else False, c))
+                    #print(c)
+                    #print(res)
+                    #print(f"{all(res)}, {not any(res)}")
+                    if any(res):
+                        on.append(len(c))
+                    elif not any(res):
+                        off.append(len(c))
+                print(f"on={len(on)}, off={len(off)}")
+                print(self.num_nodes)
+                largest_active_component.append(max(on) / 1.0 if len(on) else 0.0)
+                largest_inactive_component.append(max(off) / 1.0 if len(off) else 0.0)
                 # Size of largest component that has all nodes infected
                 #largest_active_component.append()
             fraction_infected.append(
@@ -388,14 +401,27 @@ class ProceduralGraphGenerator(object):
 
 if __name__ == "__main__":
     graphgen = GraphStructureGenerator(
-        structure_name="barabasi_albert",
-        num_nodes=500,
+        structure_name="random_geometric",
+        num_nodes=100,
         target_mean_degree = 5.0
     )
     graph = graphgen.initial_graph
 
     x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False, verbose=False, modality="reversable", return_components=True)
-    print(q)
+    q = x.infect_till_saturation("random_geometric", sample_giant= True, infection_probability=0.1, store_infectivity_list = False, verbose=False, modality="irreversable", return_components=True)
+    fracsat = q[2]
+    largest_active = np.array(q[-2]) / 100.0
+    largest_inactive = np.array(q[-1]) / 100.0
+
+    import matplotlib.pyplot as plt
+    x = range(0, len(fracsat))
+
+    plt.plot(x, fracsat, label="Fraction saturated")
+    plt.plot(x, largest_active, label="Largest 'on' component")
+    plt.plot(x, largest_inactive, label="Largest connected 'off' component")
+    plt.title("Experimental component size plot, random geometric")
+    plt.legend()
+    plt.show()
+
     #print(q[-1])
     #print(q[2])
