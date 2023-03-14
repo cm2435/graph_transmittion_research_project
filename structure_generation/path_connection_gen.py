@@ -264,6 +264,7 @@ class ProceduralGraphGenerator(object):
         sample_giant : bool = True,
         store_infectivity_list : bool = True,
         verbose: bool = True,
+        return_components: bool = False
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Method to spread the infection till saturation in the graph.
@@ -288,6 +289,8 @@ class ProceduralGraphGenerator(object):
             average_reachability,
             timesteps_to_full_saturation,
         ) = ([], [], [], 0)
+        largest_active_component = []
+        largest_inactive_component = []
         if verbose:
             pbar = tqdm.tqdm(total=max_iters)
         # Generate the giant graph as our initial structure from our 'choosing' structure
@@ -339,6 +342,21 @@ class ProceduralGraphGenerator(object):
 
             if store_infectivity_list:
                 infection_matrix_list.append(current_infection_arr)
+            if return_components:
+                # nice and slow
+                comps = list(nx.connected_components(nx.from_numpy_array(graph_structure)))
+                on = []
+                off = []
+                for c in comps:
+                    c = list(c)
+                    if all(map(lambda x: current_infection_arr[x], c)):
+                        on.append(c)
+                    elif not any(map(lambda x: current_infection_arr[x], c)):
+                        off.append(c)
+                largest_active_component.append(len(max(on, key=len)) / self.num_nodes if len(on) else 0.0)
+                largest_inactive_component.append(len(max(off, key=len)) / self.num_nodes if len(off) else 0.0)
+                # Size of largest component that has all nodes infected
+                #largest_active_component.append()
             fraction_infected.append(
                 np.count_nonzero(current_infection_arr == 1)
                 / len(current_infection_arr)
@@ -350,24 +368,34 @@ class ProceduralGraphGenerator(object):
                 "degree_list": degree_list,
             }
             info_dict.update(self._generate_network_statistics(giant_graph))
-
-        return (
+        if return_components:
+            return (
             infection_matrix_list,
             timesteps_to_full_saturation,
             fraction_infected,
             info_dict,
-        )
+            largest_active_component,
+            largest_inactive_component
+            )
+        else:
+            return (
+                infection_matrix_list,
+                timesteps_to_full_saturation,
+                fraction_infected,
+                info_dict,
+            )
 
 
 if __name__ == "__main__":
     graphgen = GraphStructureGenerator(
         structure_name="barabasi_albert",
         num_nodes=500,
-        target_mean_degree = 5
+        target_mean_degree = 5.0
     )
     graph = graphgen.initial_graph
 
     x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False)
-    print(q[-1])
-    print(q[2])
+    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False, verbose=False, modality="reversable", return_components=True)
+    print(q)
+    #print(q[-1])
+    #print(q[2])
