@@ -239,24 +239,8 @@ class ProceduralGraphGenerator(object):
             node_degree = self._find_network_closeness_centralities(
                 largest_subcomponent
             )
-            reordered_list = [
-                list(node_degree.keys())[idx]
-                for idx in np.argsort(
-                    np.absolute(
-                        np.array(list(node_degree.values()))
-                        - desired_agent_degree
-                    )
-                )
-            ]
-            reordered_list.reverse()
-            node_degree = {
-                k: node_degree[k] + desired_agent_degree
-                for k in reordered_list
-            }
-            infection_nodes = list(node_degree.keys())[
-                : self.num_agents
-            ]
-
+            reordered_list = sorted(node_degree,key=lambda x: x[1], reverse=True)
+            infection_nodes = [x[0] for x in reordered_list[:self.num_agents]]
         # Find position of all nodes in network, find the closest to the 'centre', seed the initial agents as those closest to 0,0
         elif structure_type == "random_geometric":
             node_positions = self._find_network_node_positions(largest_subcomponent)
@@ -353,19 +337,19 @@ class ProceduralGraphGenerator(object):
                             current_infection_arr[pair[1]],
                         ) = (1, 1)
             
-        if store_infectivity_list:
-            infection_matrix_list.append(current_infection_arr)
-        fraction_infected.append(
-            np.count_nonzero(current_infection_arr == 1)
-            / len(current_infection_arr)
-        )
-        info_dict = {
-            "average_degree": average_degree,
-            "num_nodes": len(current_infection_arr),
-            "modality": modality,
-            "degree_list": degree_list,
-        }
-        info_dict.update(self._generate_network_statistics(giant_graph))
+            if store_infectivity_list:
+                infection_matrix_list.append(current_infection_arr)
+            fraction_infected.append(
+                np.count_nonzero(current_infection_arr == 1)
+                / len(current_infection_arr)
+            )
+            info_dict = {
+                "average_degree": average_degree,
+                "num_nodes": len(current_infection_arr),
+                "modality": modality,
+                "degree_list": degree_list,
+            }
+            info_dict.update(self._generate_network_statistics(giant_graph))
 
         return (
             infection_matrix_list,
@@ -377,13 +361,13 @@ class ProceduralGraphGenerator(object):
 
 if __name__ == "__main__":
     graphgen = GraphStructureGenerator(
-        structure_name="random_geometric", 
+        structure_name="barabasi_albert", 
         num_nodes=500, 
         target_mean_degree = 5
     )
     graph = graphgen.initial_graph  
 
     x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("random_geometric", sample_giant= True, infection_probability=0.01, store_infectivity_list = False)
+    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False)
     print(q[-1])
     print(q[2])
