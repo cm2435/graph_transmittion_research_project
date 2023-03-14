@@ -80,7 +80,7 @@ class BarabasiAlbert(GraphGenerator):
         )
         self.initial_graph = self.generate_calibrated_graph()
 
-    def generate_graph(self, num_attachment_nodes: int = 10):
+    def generate_graph(self, num_attachment_nodes: int = 1):
         graph = nx.barabasi_albert_graph(self.num_nodes, num_attachment_nodes)
         return graph
 
