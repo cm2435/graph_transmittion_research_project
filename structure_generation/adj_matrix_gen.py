@@ -138,7 +138,34 @@ class RandomGeometric(GraphGenerator):
         self, graph_edge_radius: float = 0.5, num_nodes: int = None
     ) -> np.ndarray:
         nodes = self.num_nodes if num_nodes is None else num_nodes
-        pos = {i: (random.uniform(0, 1), random.uniform(0, 1)) for i in range(nodes)}
+
+        # generate random angle values
+        theta = np.random.rand(nodes) * 2 * np.pi
+
+        # calculate x and y coordinates
+        r = np.sqrt(np.random.rand(nodes))
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
+
+        # keep only the points within the unit circle
+        inside_circle = r <= 1
+        x_inside = x[inside_circle]
+        y_inside = y[inside_circle]
+
+        # generate additional points until we have 1000 points in the unit circle
+        while len(x_inside) < nodes:
+            r = np.sqrt(np.random.rand(nodes - len(x_inside)))
+            theta = np.random.rand(nodes - len(x_inside)) * 2 * np.pi
+            x = r * np.cos(theta)
+            y = r * np.sin(theta)
+            inside_circle = r <= 1
+            x_inside = np.concatenate([x_inside, x[inside_circle]])
+            y_inside = np.concatenate([y_inside, y[inside_circle]])
+
+        # combine x and y coordinates into a dict 
+        
+        points = list(zip(x_inside[:nodes].tolist(), y_inside[:nodes].tolist()))
+        pos = {i: (points[i][0], points[i][1]) for i in range(nodes)}
 
         return nx.random_geometric_graph(nodes, graph_edge_radius, pos=pos)
 
@@ -253,6 +280,6 @@ class GraphStructureGenerator(object):
 if __name__ == "__main__":
     # x = GraphStructureGenerator(structure_name="random_sparse", num_nodes=50, node_degree = 50)
     x = GraphStructureGenerator(
-        structure_name="random_geometric", num_nodes=750, target_mean_degree=5
+        structure_name="random_geometric", num_nodes=10, target_mean_degree=5
     )
     print(x.initial_graph)

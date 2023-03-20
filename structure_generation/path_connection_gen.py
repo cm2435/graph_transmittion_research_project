@@ -1,4 +1,4 @@
-from adj_matrix_gen import GraphStructureGenerator
+from .adj_matrix_gen import GraphStructureGenerator
 import numpy as np
 import random
 import tqdm

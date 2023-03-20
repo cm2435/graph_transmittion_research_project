@@ -9,6 +9,9 @@ import yaml
 from pathlib import Path
 import sys 
 import os 
+import multiprocessing
+import itertools
+
 sys.path.append(os.path.dirname(os.getcwd()))
 from util.functions import logistic
 from structure_generation.path_connection_gen import ProceduralGraphGenerator, StatsUtils, GraphStructureGenerator
@@ -62,6 +65,8 @@ def run_single_simulation(
     return results_dict_reversable, results_dict_irreversable, results_dict_probability
     
 def run_simulation(mean_degree : int, structure_name : str) -> list: 
+    geometric_graph_conf = yaml.safe_load(Path('config.yml').read_text())['reachability']
+
     num_runs = {
         "random_geometric" : geometric_graph_conf['num_simulation_runs'],
         "barabasi_albert" : geometric_graph_conf['num_simulation_runs'],
