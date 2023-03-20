@@ -34,3 +34,23 @@ activated component and largest non-activated component (should seem some dynami
 
 - Plot/record "something" about the starting node of the BA graph e.g. compare intuition with reality when it come to age of starting node (wrt to preferential attachment and how the graph is constructed)
 
+
+# Meeting notes - 2023-3-14
+
+- Point about matched comparisons again – plot the difference in saturation between RG and BA on the same plot for example.
+
+- Plot variation in how long reversible edges take to turn off, currently 10, what about N
+
+- Plot variation in 50% time (denoted $T_{50}$): Reversible parameters, transmission proability and so on.
+
+- $\frac{\partial T_{50}}{\partial p}$? do physics blah look for ode dick james noises.
+
+- There was a point about getting plots into a state fit for presentation to a human being.
+
+- Wants to see scaling (not sure), and definitely a plot of data transformed into a straight line (e.g. inverse logistic).
+
+- I have a note about circles and random geometric cases have inhomogeneity at the corners.
+
+- Seed node statisics farness and so on.
+
+- Difference in path length distribution (seed )
