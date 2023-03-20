@@ -15,7 +15,7 @@ import itertools
 sys.path.append(os.path.dirname(os.getcwd()))
 from util.functions import logistic
 from structure_generation.path_connection_gen import ProceduralGraphGenerator, StatsUtils, GraphStructureGenerator
-
+import time
 
 def run_single_simulation(
     passed_inputs, 
@@ -25,6 +25,7 @@ def run_single_simulation(
     Function to run one iteration of the simulation. Need to pass a list instead of arguments to function 
     is so that it can work with pmap.unordered
     """
+    np.random.seed(random.randint(0,10000))
     mean_degree, structure_name, number_nodes = passed_inputs
     results_dict_irreversable, results_dict_reversable, results_dict_probability = {}, {}, {}
     if verbose: 
@@ -35,6 +36,7 @@ def run_single_simulation(
         target_mean_degree = mean_degree
     )
     graph = graphgen.initial_graph  
+    print(graph.edges)
 
     x = ProceduralGraphGenerator(graph, num_nodes= graph.number_of_nodes())
     infection_matrix_list_irreversable, timesteps_saturation_irreversable, fraction_infected_list_irreversable, info_dict_irreversable = x.infect_till_saturation(
@@ -109,9 +111,7 @@ def run_simulation(mean_degree : int, structure_name : str) -> list:
 
 def plot_results(results_dict : dict, structure_name : str, xlim_range = None):
     num_nodes_run = [x['num_nodes'] for x in results_dict['info_dict']]
-    #average_node_num = np.average(num_nodes_run)
-    #std_node_num = np.std(num_nodes_run)
-    
+
     average_nodes_final = []
     for i, iter in enumerate(results_dict['fraction_infected_list']):
         if 1==1:
