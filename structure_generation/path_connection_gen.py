@@ -361,13 +361,14 @@ class ProceduralGraphGenerator(object):
                 np.count_nonzero(current_infection_arr == 1)
                 / len(current_infection_arr)
             )
-            info_dict = {
-                "average_degree": average_degree,
-                "num_nodes": len(current_infection_arr),
-                "modality": modality,
-                "degree_list": degree_list,
-            }
-            info_dict.update(self._generate_network_statistics(giant_graph))
+        info_dict = {
+            "average_degree": average_degree,
+            "num_nodes": len(current_infection_arr),
+            "modality": modality,
+            "degree_list": degree_list,
+        }
+        info_dict.update(self._generate_network_statistics(giant_graph))
+        
         if return_components:
             return (
             infection_matrix_list,
@@ -393,9 +394,9 @@ if __name__ == "__main__":
         target_mean_degree = 5.0
     )
     graph = graphgen.initial_graph
-
+    print(graph)
     x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=0.1, store_infectivity_list = False, verbose=False, modality="reversable", return_components=True)
+    q = x.infect_till_saturation("barabasi_albert", sample_giant= True, infection_probability=1.0, store_infectivity_list = False, verbose=True, modality="irreversable", return_components=False)
     print(q)
     #print(q[-1])
     #print(q[2])
