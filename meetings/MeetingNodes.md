@@ -37,7 +37,7 @@ activated component and largest non-activated component (should seem some dynami
 
 # Meeting notes - 2023-3-14
 
-Charlie: 
+Charlie:
 - Point about matched comparisons again – plot the difference in saturation between RG and BA on the same plot for example.
 
 - I have a note about circles and random geometric cases have inhomogeneity at the corners.
@@ -49,7 +49,7 @@ Charlie:
 
 
 
-Max: 
+Max:
 - Wants to see scaling (not sure), and definitely a plot of data transformed into a straight line (e.g. inverse logistic).
 
 - $\frac{\partial T_{50}}{\partial p}$? do physics blah look for ode dick james noises.
@@ -57,7 +57,7 @@ Max:
 - Seed node statisics farness and so on.
 
 
-Not this week: 
+Not this week:
 - There was a point about getting plots into a state fit for presentation to a human being.
 
 DONE:
