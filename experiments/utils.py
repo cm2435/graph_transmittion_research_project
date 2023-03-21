@@ -36,18 +36,21 @@ def run_single_simulation(
         target_mean_degree = mean_degree
     )
     graph = graphgen.initial_graph  
-    print(graph.edges)
 
     x = ProceduralGraphGenerator(graph, num_nodes= graph.number_of_nodes())
-    infection_matrix_list_irreversable, timesteps_saturation_irreversable, fraction_infected_list_irreversable, info_dict_irreversable = x.infect_till_saturation(
-        structure_name = structure_name, modality="irreversable", verbose= False
+
+    infection_matrix_list_prob, timesteps_saturation_prob, fraction_infected_list_prob, info_dict_prob = x.infect_till_saturation(
+        structure_name = structure_name, modality="irreversable", verbose= False, infection_probability= 0.01, sample_giant= False
     )
+    infection_matrix_list_irreversable, timesteps_saturation_irreversable, fraction_infected_list_irreversable, info_dict_irreversable = x.infect_till_saturation(
+        structure_name = structure_name, modality="irreversable", verbose= False, sample_giant= True
+    )
+
+
     infection_matrix_list_reversable, timesteps_saturation_reversable, fraction_infected_list_reversable, info_dict_reversable = x.infect_till_saturation(
         structure_name = structure_name, modality="reversable", verbose= False
     )
-    infection_matrix_list_prob, timesteps_saturation_prob, fraction_infected_list_prob, info_dict_prob = x.infect_till_saturation(
-        structure_name = structure_name, modality="irreversable", verbose= False, infection_probability= 0.005, sample_giant= False
-    )
+
 
     results_dict_irreversable["infection_matrix"] = infection_matrix_list_irreversable
     results_dict_irreversable["timesteps_saturation"] = timesteps_saturation_irreversable
@@ -64,7 +67,7 @@ def run_single_simulation(
     results_dict_probability["fraction_infected_list"] = fraction_infected_list_prob
     results_dict_probability["info_dict"] = info_dict_prob
 
-    return results_dict_reversable, results_dict_irreversable, results_dict_probability
+    return results_dict_irreversable,results_dict_reversable, results_dict_probability
     
 def run_simulation(mean_degree : int, structure_name : str) -> list: 
     geometric_graph_conf = yaml.safe_load(Path('config.yml').read_text())['reachability']
@@ -130,3 +133,21 @@ def plot_results(results_dict : dict, structure_name : str, xlim_range = None):
     plt.ylabel("fraction of giant graph infected")
     plt.legend()
     plt.show()
+
+
+
+
+if __name__ == "__main__":
+    graphgen = GraphStructureGenerator(
+        structure_name="random_geometric", 
+        num_nodes=100, 
+        target_mean_degree = 5
+    )
+    graph = graphgen.initial_graph  
+
+    x = ProceduralGraphGenerator(graph, num_nodes= graph.number_of_nodes())
+
+    infection_matrix_list_prob, timesteps_saturation_prob, fraction_infected_list_prob, info_dict_prob = x.infect_till_saturation(
+        structure_name = "random_geometric", modality="irreversable", verbose= False, infection_probability= 1, sample_giant= True
+    )
+    print(fraction_infected_list_prob)
