@@ -165,6 +165,7 @@ class RandomGeometric(GraphGenerator):
         # combine x and y coordinates into a dict 
         
         points = list(zip(x_inside[:nodes].tolist(), y_inside[:nodes].tolist()))
+        
         pos = {i: (points[i][0], points[i][1]) for i in range(nodes)}
 
         return nx.random_geometric_graph(nodes, graph_edge_radius, pos=pos)
@@ -280,6 +281,6 @@ class GraphStructureGenerator(object):
 if __name__ == "__main__":
     # x = GraphStructureGenerator(structure_name="random_sparse", num_nodes=50, node_degree = 50)
     x = GraphStructureGenerator(
-        structure_name="random_geometric", num_nodes=10, target_mean_degree=5
+        structure_name="random_geometric", num_nodes=50, target_mean_degree=5
     )
-    print(x.initial_graph)
+    print(x.initial_graph.edges)

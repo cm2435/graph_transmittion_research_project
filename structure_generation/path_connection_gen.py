@@ -1,4 +1,4 @@
-from .adj_matrix_gen import GraphStructureGenerator
+from  .adj_matrix_gen import GraphStructureGenerator
 import numpy as np
 import random
 import tqdm
@@ -29,8 +29,10 @@ class GraphStructureMutator(object):
             after a given time. of shape [(adj_matrix_x_cord, adj_matrix_y_cord, timesteps_left_to_live)...]
     """
 
-    def __init__(self, initial_structure: np.ndarray):
+    def __init__(self, initial_structure: np.ndarray, edge_lifespan_mean : int = 10, use_probabilistic_edgelife : bool = False):
         self.initial_structure: str = initial_structure
+        self.edge_lifespan_mean = edge_lifespan_mean
+        self.use_probabilistic_edgelife = use_probabilistic_edgelife
         self.edge_structure: List[Tuple[int, int, int]] = []
 
     def _remove_stale_edges(
@@ -56,7 +58,6 @@ class GraphStructureMutator(object):
         sampling_graph: np.ndarray,
         updating_graph: np.ndarray,
         num_new_edges_per_timestep: int = 2,
-        generated_edge_lifespan: int = 5,
         modality: str = "irreversable",
     ) -> np.ndarray:
         """
@@ -67,11 +68,16 @@ class GraphStructureMutator(object):
             "irreversable",
             "reversable",
         ], f"Invalid structure modality passed : {modality}. Allowed types are irreversable, reversable"
+        generated_edge_lifespan = self.edge_lifespan_mean
+
         if modality == "irreversable":
-            generated_edge_lifespan = 2147483647
+            generated_edge_lifespan = 1000000
 
         nodepair_list = np.dstack(np.where(sampling_graph == 1))[0]
         for _ in range(num_new_edges_per_timestep):
+            if self.use_probabilistic_edgelife: 
+                generated_edge_lifespan = np.random.normal(loc = generated_edge_lifespan, scale = generated_edge_lifespan/0.25)
+        
             nodepair_x, nodepair_y = nodepair_list[
                 random.randint(0, len(nodepair_list) - 1)
             ]
@@ -110,11 +116,11 @@ class ProceduralGraphGenerator(object):
             Instance of GraphStructureMutator with the `initial_structure` as the initial structure.
     """
 
-    def __init__(self, initial_graph, num_nodes: int = 1000, num_agents: int = 1):
+    def __init__(self, initial_graph, num_nodes: int = 1000, num_agents: int = 1, edge_lifespan_mean : int = 10,use_probabilistic_edgelife : bool = False):
         self.num_nodes = num_nodes
         self.num_agents = num_agents
         self.initial_graph = initial_graph
-        self.structure_mutator = GraphStructureMutator(initial_structure=initial_graph)
+        self.structure_mutator = GraphStructureMutator(initial_structure=initial_graph, edge_lifespan_mean = edge_lifespan_mean, use_probabilistic_edgelife = use_probabilistic_edgelife)
         random.seed(1234)
 
     @staticmethod
@@ -264,7 +270,8 @@ class ProceduralGraphGenerator(object):
         sample_giant : bool = True,
         store_infectivity_list : bool = True,
         verbose: bool = True,
-        return_components: bool = False
+        return_components: bool = False,
+
     ) -> Tuple[List[np.ndarray], int, List[float]]:
         """
         Method to spread the infection till saturation in the graph.
@@ -396,7 +403,7 @@ if __name__ == "__main__":
     graph = graphgen.initial_graph
     print(graph)
     x = ProceduralGraphGenerator(graph)
-    q = x.infect_till_saturation("barabasi_albert", sample_giant= True, infection_probability=1.0, store_infectivity_list = False, verbose=True, modality="irreversable", return_components=False)
+    q = x.infect_till_saturation("barabasi_albert", sample_giant= False, infection_probability=1.0, store_infectivity_list = False, verbose=True, modality="irreversable", return_components=False)
     print(q)
     #print(q[-1])
     #print(q[2])
