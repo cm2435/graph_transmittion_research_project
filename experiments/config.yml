@@ -9,9 +9,9 @@ saturation:
 
 #Configuration for main_reachability
 reachability:
-  num_simulation_runs : 30
+  num_simulation_runs : 4
   mean_degrees : [5]
-  nodes : 200
+  nodes : 50
   structure_names : ["random_geometric", "barabasi_albert"]
   
 # Configuration for graph visualizations
