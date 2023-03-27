@@ -46,13 +46,15 @@ Charlie:
 
 - Plot variation in 50% time (denoted $T_{50}$): Reversible parameters, transmission proability and so on.
 
+- Look at distance from seed node plot 
+
 
 
 
 Max:
 - Wants to see scaling (not sure), and definitely a plot of data transformed into a straight line (e.g. inverse logistic).
 
-- $\frac{\partial T_{50}}{\partial p}$? do physics blah look for ode dick james noises.
+- $\frac{\partial T_{50}}{\partial p}$? do physics and look for system ODE.
 
 - Seed node statisics farness and so on.
 

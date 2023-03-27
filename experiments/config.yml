@@ -11,7 +11,7 @@ saturation:
 reachability:
   num_simulation_runs : 30
   mean_degrees : [5]
-  nodes : 750
+  nodes : 200
   structure_names : ["random_geometric", "barabasi_albert"]
   
 # Configuration for graph visualizations

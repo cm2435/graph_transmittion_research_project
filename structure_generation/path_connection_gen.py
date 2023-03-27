@@ -165,6 +165,10 @@ class ProceduralGraphGenerator(object):
         return nx.get_node_attributes(graph, "pos")
 
     @staticmethod
+    def _find_farness(graph, node): 
+        pass
+
+    @staticmethod
     def _generate_network_statistics(
         graph: Union[np.ndarray, nx.classes.graph.Graph]
     ) -> dict:
@@ -248,6 +252,7 @@ class ProceduralGraphGenerator(object):
             reordered_list = sorted(node_degree,key=lambda x: x[1], reverse=True)
             infection_nodes = [x[0] for x in reordered_list[:self.num_agents]]
         # Find position of all nodes in network, find the closest to the 'centre', seed the initial agents as those closest to 0,0
+        
         elif structure_type == "random_geometric":
             node_positions = self._find_network_node_positions(largest_subcomponent)
             distances = []
