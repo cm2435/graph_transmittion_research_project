@@ -64,3 +64,27 @@ Not this week:
 
 DONE:
 - Difference in path length distribution (seed )
+
+# Meeting notes 2023-3-21
+
+- Data collapse for distribution of half-saturation times i.e. are they the same shape
+
+- Note about inaccurate spelling in plots
+
+- Comparison of on/off times for edges in reversible case
+
+- Scrap the KDE plots
+
+- "More data" in random geometric cases i.e. consider ensemble rather than single cases. Could mean having sometihng like a box and whisker plot in the histogram
+
+- Diffusional dynamics. This is a spread of particles rather than informed-ness, be aware.
+
+- Compare with diffusion on a lattice (e.g. each point not on the boundary is connected to 4 other nodes).
+
+- Be aware of writing timeline.
+
+## Triage:
+
+Max: Diffusion, and comparison with lattice dynamics.
+
+Charlie: Collapse of half saturation, on/off times.
